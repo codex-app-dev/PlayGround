@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#07131f" />
+    <title>TRIBES: SKYFALL — 3D FPS</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%2337e6ff' d='M32 3 59 18v28L32 61 5 46V18z'/%3E%3Cpath fill='%2307131f' d='m32 14 14 8v6L32 36l-14-8v-6z'/%3E%3C/svg%3E" />
+  </head>
+  <body>
+    <div id="app">
+      <div id="viewport">
+        <canvas id="game-canvas"></canvas>
+        <div class="scanlines"></div>
+        <div class="vignette"></div>
+        <div id="damage-flash"></div>
+      </div>
+
+      <div id="menu" class="screen">
+        <div class="menu-backdrop"></div>
+        <div class="menu-inner">
+          <div class="brand">
+            <div class="brand-kicker"><span></span> HORIZON FRONTIER LEAGUE <span></span></div>
+            <h1>TRIBES<span>SKYFALL</span></h1>
+            <p class="brand-sub">GRAB THE FLAG. RIDE THE SKY. NEVER TOUCH THE GROUND.</p>
+          </div>
+          <div class="menu-play">
+            <button id="play-button" type="button">PLAY NOW</button>
+            <div class="menu-meta">BLUE TEAM <b>VS</b> RED TEAM &nbsp;·&nbsp; FIRST TO 5 CAPTURES</div>
+          </div>
+          <div class="controls-grid">
+            <div class="control"><kbd>W A S D</kbd><span>MOVE</span></div>
+            <div class="control"><kbd>MOUSE</kbd><span>AIM / FIRE</span></div>
+            <div class="control"><kbd>SPACE</kbd><span>JUMP / JETPACK</span></div>
+            <div class="control"><kbd>SHIFT</kbd><span>SKI</span></div>
+            <div class="control"><kbd>RMB</kbd><span>ZOOM</span></div>
+            <div class="control"><kbd>R</kbd><span>RELOAD</span></div>
+          </div>
+          <div class="menu-footer">
+            <span class="live-dot"></span> LIVE SIMULATION · CTF · 6 BOTS
+            <span class="sep">/</span> DESKTOP + MOUSE RECOMMENDED
+          </div>
+        </div>
+      </div>
+
+      <div id="hud" class="hidden">
+        <div class="hud-top">
+          <div class="team-score blue">
+            <div class="team-name">BLUE</div>
+            <div class="team-caps" id="blue-score">0</div>
+            <div class="team-flag" id="blue-flag-status">FLAG SECURE</div>
+          </div>
+          <div class="match-center">
+            <div class="match-mode">CAPTURE THE FLAG</div>
+            <div class="match-timer" id="match-timer">09:00</div>
+            <div class="match-bar"><i id="match-bar-fill"></i></div>
+          </div>
+          <div class="team-score red">
+            <div class="team-name">RED</div>
+            <div class="team-caps" id="red-score">0</div>
+            <div class="team-flag" id="red-flag-status">FLAG SECURE</div>
+          </div>
+        </div>
+
+        <div class="hud-left">
+          <div class="radar-shell">
+            <canvas id="radar" width="220" height="220"></canvas>
+            <div class="radar-ring"></div>
+            <div class="radar-label">TACTICAL</div>
+          </div>
+          <div class="vitals">
+            <div class="vital-row">
+              <span class="vital-label">VITALS</span>
+              <div class="vital-bar health"><i id="health-fill"></i></div>
+              <span class="vital-value" id="health-value">100</span>
+            </div>
+            <div class="vital-row">
+              <span class="vital-label">JET</span>
+              <div class="vital-bar energy"><i id="energy-fill"></i></div>
+              <span class="vital-value" id="energy-value">100</span>
+            </div>
+          </div>
+        </div>
+
+        <div id="killfeed"></div>
+        <div id="objective-banner"></div>
+
+        <div class="crosshair" id="crosshair">
+          <i class="ch-dot"></i>
+          <i class="ch-line ch-top"></i>
+          <i class="ch-line ch-bottom"></i>
+          <i class="ch-line ch-left"></i>
+          <i class="ch-line ch-right"></i>
+          <div class="hitmarker" id="hitmarker"><span></span><span></span><span></span><span></span></div>
+        </div>
+
+        <div class="hud-right">
+          <div class="flag-readout" id="carried-flag"></div>
+          <div class="weapon-panel">
+            <div class="weapon-kicker">PRIMARY</div>
+            <div class="weapon-name">SPINFUSOR <b>MK-IV</b></div>
+            <div class="weapon-ammo"><span id="ammo-value">8</span><small>/ 8</small></div>
+            <div class="reload-meter"><i id="reload-fill"></i></div>
+            <div class="weapon-state" id="weapon-state">READY</div>
+          </div>
+        </div>
+
+        <div id="touch-controls">
+          <div class="touch-stick" id="touch-stick">
+            <div class="touch-stick-base"></div>
+            <div class="touch-stick-hint">MOVE</div>
+            <div class="touch-stick-thumb" id="touch-stick-thumb"></div>
+          </div>
+          <div class="touch-actions">
+            <button class="touch-btn" id="touch-reload" type="button" data-action="reload">RELOAD</button>
+            <button class="touch-btn" id="touch-zoom" type="button" data-action="zoom">ZOOM</button>
+            <button class="touch-btn" id="touch-ski" type="button" data-action="ski">SKI</button>
+            <button class="touch-btn" id="touch-jump" type="button" data-action="jump">JUMP</button>
+            <button class="touch-btn fire" id="touch-fire" type="button" data-action="fire">FIRE</button>
+          </div>
+        </div>
+
+        <div class="hud-bottom">
+          <div class="speed-readout"><span id="speed-value">0</span><small>KM/H</small></div>
+          <div class="ski-readout" id="ski-readout">SKI</div>
+          <div class="lock-hint" id="lock-hint">CLICK TO CAPTURE MOUSE</div>
+        </div>
+      </div>
+
+      <div id="death-screen" class="screen hidden">
+        <div class="death-inner">
+          <div class="death-kicker">SIGNAL LOST</div>
+          <h2>YOU WERE FRAGGED</h2>
+          <div class="death-by" id="death-by">BY AN UNKNOWN ASSAILANT</div>
+          <div class="respawn">RECONSTRUCTING IN <b id="respawn-timer">3</b></div>
+        </div>
+      </div>
+
+      <div id="match-screen" class="screen hidden">
+        <div class="match-inner">
+          <div class="match-kicker" id="match-result-kicker">VICTORY</div>
+          <h2 id="match-result-title">BLUE TEAM WINS</h2>
+          <div class="match-final" id="match-final">5 — 2</div>
+          <button id="rematch-button" type="button">PLAY AGAIN</button>
+        </div>
+      </div>
+
+      <div id="pause-hint" class="hidden">CLICK TO LOOK</div>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
