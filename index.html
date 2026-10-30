@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#080b0f">
+  <meta name="color-scheme" content="dark">
+  <title>Swap Chess — every capture trades powers</title>
+  <meta name="description" content="A chess variant where every capture swaps the pieces' movement powers. Touch-first, with optional tilt controls.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%23f0c674'/%3E%3Cpath d='M13.2 3 5.5 13.4h5.2L9.8 21l8.4-11.1h-5.5z' fill='%231a1308'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="atmosphere" aria-hidden="true">
+    <div class="orb orb-gold"></div>
+    <div class="orb orb-teal"></div>
+    <div class="grain"></div>
+    <div class="vignette"></div>
+  </div>
+
+  <div class="app">
+    <header class="topbar">
+      <div class="brand" aria-label="Swap Chess">
+        <span class="brand-bolt"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-bolt"></use></svg></span>
+        <span class="brand-type">
+          <span class="brand-name">SWAP<span>CHESS</span></span>
+          <span class="brand-tag">every capture trades powers</span>
+        </span>
+      </div>
+      <div class="top-actions">
+        <button class="icon-btn" id="soundBtn" type="button" aria-label="Mute sound" aria-pressed="true" title="Sound">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sound"></use></svg>
+        </button>
+        <button class="icon-btn" id="tiltBtn" type="button" aria-label="Enable tilt controls" aria-pressed="false" title="Tilt">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-tilt"></use></svg>
+        </button>
+        <button class="icon-btn icon-btn-text" id="helpBtn" type="button" aria-label="How to play" title="How to play">?</button>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="board-col" aria-label="Game">
+        <div class="matchbar">
+          <div class="turn" id="turnPill">
+            <span class="turn-dot" aria-hidden="true"></span>
+            <span id="turnText">White to move</span>
+          </div>
+          <div class="match-meta">
+            <span class="meta-pill" id="swapCount" title="Captures so far">
+              <svg class="mini-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-bolt"></use></svg>
+              <span id="swapCountText">0 swaps</span>
+            </span>
+            <span class="meta-pill meta-pill-quiet" id="plyCount">Move 1</span>
+          </div>
+        </div>
+
+        <div class="board-stage">
+          <div class="board-frame">
+            <div class="board-3d" id="board3d">
+              <div class="board" id="board">
+                <div class="squares" id="squares" role="grid" aria-label="Chess board"></div>
+                <div class="pieces" id="pieces" aria-hidden="true"></div>
+                <div class="board-shine" aria-hidden="true"></div>
+              </div>
+            </div>
+          </div>
+          <div class="tilt-pill" id="tiltPill" hidden>
+            <span class="tilt-bubble" aria-hidden="true"></span>
+            TILT
+          </div>
+        </div>
+
+        <div class="hint" id="hintBar">
+          <svg class="hint-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-spark"></use></svg>
+          <span id="hintText">Tap a piece, then a lit square</span>
+        </div>
+
+      </section>
+
+      <aside class="side" aria-label="Match information">
+        <section class="panel players-panel">
+          <div class="panel-head">
+            <span>Match</span>
+            <span class="chip" id="modeChip">2 players</span>
+          </div>
+          <div class="players" id="players">
+            <div class="player" data-side="w">
+              <span class="player-disc">
+                <svg viewBox="0 0 100 100" aria-hidden="true"><use href="#pc-king"></use></svg>
+              </span>
+              <span class="player-id">
+                <span class="player-name">White</span>
+                <span class="player-sub" id="whiteSub">12 power</span>
+              </span>
+              <span class="player-score" id="whiteScore">12</span>
+            </div>
+            <div class="player" data-side="b">
+              <span class="player-disc">
+                <svg viewBox="0 0 100 100" aria-hidden="true"><use href="#pc-king"></use></svg>
+              </span>
+              <span class="player-id">
+                <span class="player-name">Black</span>
+                <span class="player-sub" id="blackSub">12 power</span>
+              </span>
+              <span class="player-score" id="blackScore">12</span>
+            </div>
+          </div>
+          <div class="material-note" id="materialNote">Material even</div>
+        </section>
+
+        <section class="panel actions-panel">
+          <div class="panel-head"><span>Controls</span><span class="chip chip-quiet" id="turnChip">White</span></div>
+          <div class="actions">
+            <button class="btn" id="undoBtn" type="button" title="Undo (U)">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-undo"></use></svg>
+              <span>Undo</span>
+            </button>
+            <button class="btn" id="flipBtn" type="button" title="Flip board (F)">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-flip"></use></svg>
+              <span>Flip</span>
+            </button>
+            <button class="btn" id="newBtn" type="button" title="New game (N)">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-restart"></use></svg>
+              <span>New</span>
+            </button>
+          </div>
+          <div class="mode-switch" role="group" aria-label="Game mode">
+            <button class="mode-btn is-active" data-mode="2p" type="button">2 Players</button>
+            <button class="mode-btn" data-mode="bot" type="button">Vs Bot</button>
+          </div>
+        </section>
+
+        <div class="coach" id="coach">
+          <div class="coach-art" aria-hidden="true">
+            <svg viewBox="0 0 100 100" class="coach-piece coach-black"><use href="#pc-knight"></use></svg>
+            <span class="coach-swap">⇄</span>
+            <svg viewBox="0 0 100 100" class="coach-piece"><use href="#pc-rook"></use></svg>
+            <span class="coach-badge">N</span>
+          </div>
+          <p><strong>Every capture swaps powers.</strong> Take a knight with your rook and the rook moves like a knight. The badge marks a changed power.</p>
+          <button class="coach-close" id="coachClose" type="button" aria-label="Dismiss tip">×</button>
+        </div>
+
+        <section class="panel feed-panel">
+          <div class="panel-head">
+            <span>Swap log</span>
+            <span class="chip chip-quiet" id="captureCount">0 captures</span>
+          </div>
+          <ol class="feed" id="feed"></ol>
+          <p class="feed-empty" id="feedEmpty">No captures yet — every piece still has its own power.</p>
+        </section>
+
+        <section class="panel rule-panel">
+          <div class="rule-line">
+            <span class="rule-num">01</span>
+            <p><strong>Captures swap powers.</strong> The capturing piece inherits the movement of the piece it takes.</p>
+          </div>
+          <div class="rule-line">
+            <span class="rule-num">02</span>
+            <p><strong>Pawn power promotes.</strong> Any piece carrying pawn power that reaches the far rank becomes queen power.</p>
+          </div>
+          <div class="rule-line">
+            <span class="rule-num">03</span>
+            <p><strong>Checkmate still wins.</strong> No castling or en passant. A badge marks every changed power.</p>
+          </div>
+        </section>
+      </aside>
+    </main>
+
+    <footer class="footer">
+      <span>Swap Chess</span>
+      <span class="footer-dot">·</span>
+      <span>touch-first chess variant</span>
+      <span class="footer-dot">·</span>
+      <button class="link-btn" id="footerHelp" type="button">How to play</button>
+    </footer>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <div class="sr-only" id="announcer" role="status" aria-live="assertive"></div>
+
+  <dialog class="sheet" id="rulesDialog" aria-labelledby="rulesTitle">
+    <div class="sheet-head">
+      <div>
+        <p class="kicker">The one rule that changes everything</p>
+        <h2 id="rulesTitle">How Swap Chess works</h2>
+      </div>
+      <button class="icon-btn sheet-close" type="button" data-close="rulesDialog" aria-label="Close rules">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-close"></use></svg>
+      </button>
+    </div>
+
+    <div class="rules-body">
+      <div class="rule-hero" aria-hidden="true">
+        <div class="rule-hero-square">
+          <svg viewBox="0 0 100 100" class="hero-piece hero-white"><use href="#pc-rook"></use></svg>
+        </div>
+        <div class="rule-hero-arrow">
+          <span>takes</span>
+          <svg viewBox="0 0 24 24"><use href="#i-arrow"></use></svg>
+        </div>
+        <div class="rule-hero-square is-dark">
+          <svg viewBox="0 0 100 100" class="hero-piece hero-black"><use href="#pc-knight"></use></svg>
+        </div>
+        <div class="rule-hero-arrow">
+          <span>gains</span>
+          <svg viewBox="0 0 24 24"><use href="#i-arrow"></use></svg>
+        </div>
+        <div class="rule-hero-square">
+          <svg viewBox="0 0 100 100" class="hero-piece hero-white"><use href="#pc-rook"></use></svg>
+          <span class="hero-badge">N</span>
+        </div>
+      </div>
+
+      <ol class="rule-list">
+        <li>
+          <span class="rule-bullet">1</span>
+          <div><strong>Every capture is a trade.</strong><p>When you take a piece, your piece keeps its shape but adopts the captured piece's movement power. The captured piece leaves with your old power.</p></div>
+        </li>
+        <li>
+          <span class="rule-bullet">2</span>
+          <div><strong>Watch the badges.</strong><p>A small badge appears whenever a piece's power differs from its shape. A rook with an <b class="pw pw-knight">N</b> badge moves like a knight; a pawn with a <b class="pw pw-queen">Q</b> badge moves like a queen.</p></div>
+        </li>
+        <li>
+          <span class="rule-bullet">3</span>
+          <div><strong>Pawn power promotes.</strong><p>Any piece carrying pawn power that reaches the far rank becomes queen power. This can happen after a capture, too.</p></div>
+        </li>
+        <li>
+          <span class="rule-bullet">4</span>
+          <div><strong>The crown is still the crown.</strong><p>Kings keep their identity. Checkmate wins. There is no castling or en passant, and pawns may only double-step from their home rank.</p></div>
+        </li>
+      </ol>
+
+      <div class="rules-tips">
+        <p><strong>Touch:</strong> tap a piece, then tap a lit square. Capture targets show a <span class="inline-swap">⇄</span> mark.</p>
+        <p><strong>Tilt:</strong> turn on tilt in the header for a subtle 3D board. On iPhone and iPad, Safari asks for motion access first.</p>
+      </div>
+    </div>
+
+    <div class="sheet-foot">
+      <button class="btn btn-primary" type="button" data-close="rulesDialog">Got it</button>
+    </div>
+  </dialog>
+
+  <dialog class="sheet over-sheet" id="overDialog" aria-labelledby="overTitle">
+    <div class="over-mark" id="overMark" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><use href="#i-crown"></use></svg>
+    </div>
+    <p class="kicker" id="overKicker">Checkmate</p>
+    <h2 id="overTitle">White wins</h2>
+    <p class="over-text" id="overText">The black king has no escape.</p>
+    <div class="over-stats" id="overStats"></div>
+    <div class="over-actions">
+      <button class="btn btn-primary" id="rematchBtn" type="button">Rematch</button>
+      <button class="btn" id="reviewBtn" type="button">View board</button>
+    </div>
+  </dialog>
+
+  <svg class="sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+    <defs>
+      <symbol id="i-bolt" viewBox="0 0 24 24">
+        <path d="M13.2 2 4.8 13.4h5.7L9.4 22l9-11.9h-5.9z" fill="currentColor"/>
+      </symbol>
+      <symbol id="i-spark" viewBox="0 0 24 24">
+        <path d="M12 2.5 13.8 9l6.5 1.8-6.5 1.8L12 19l-1.8-6.4L3.7 10.8 10.2 9z" fill="currentColor"/>
+      </symbol>
+      <symbol id="i-arrow" viewBox="0 0 24 24">
+        <path d="M4 12h15M14 7l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </symbol>
+      <symbol id="i-sound" viewBox="0 0 24 24">
+        <path d="M4 9.5v5h3.2L12 18V6L7.2 9.5z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+        <path d="M15.5 8.5a5 5 0 0 1 0 7M18 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+      </symbol>
+      <symbol id="i-muted" viewBox="0 0 24 24">
+        <path d="M4 9.5v5h3.2L12 18V6L7.2 9.5z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+        <path d="m15.5 9.5 5 5m0-5-5 5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+      </symbol>
+      <symbol id="i-tilt" viewBox="0 0 24 24">
+        <rect x="7" y="2.5" width="10" height="19" rx="2.2" fill="none" stroke="currentColor" stroke-width="1.6"/>
+        <path d="M10 5h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+        <circle cx="12" cy="16.5" r="1.3" fill="currentColor"/>
+        <path d="M2.5 8.5a9.5 9.5 0 0 0 0 7M21.5 8.5a9.5 9.5 0 0 1 0 7" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" opacity=".6"/>
+      </symbol>
+      <symbol id="i-undo" viewBox="0 0 24 24">
+        <path d="M9 5 4 9.5 9 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M4.5 9.5H14a5.5 5.5 0 0 1 0 11h-3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </symbol>
+      <symbol id="i-flip" viewBox="0 0 24 24">
+        <path d="M7 3.5v14m0 0-3-3m3 3 3-3M17 20.5v-14m0 0-3 3m3-3 3 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </symbol>
+      <symbol id="i-restart" viewBox="0 0 24 24">
+        <path d="M20 12a8 8 0 1 1-2.4-5.7M20 3.5V8h-4.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </symbol>
+      <symbol id="i-close" viewBox="0 0 24 24">
+        <path d="m6 6 12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </symbol>
+      <symbol id="i-crown" viewBox="0 0 24 24">
+        <path d="M3 8.5 6 18h12l3-9.5-5 3.2L12 5 8 11.7z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+        <path d="M6.5 20.5h11" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+      </symbol>
+
+      <symbol id="pc-pawn" viewBox="0 0 100 100">
+        <g fill="currentColor" stroke="var(--pc-line)" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round">
+          <circle cx="50" cy="26" r="11.5"/>
+          <path d="M43 36h14l2.2 7.5c0 4.8-3.7 7.8-7 10.6l5 16.9H42.8l5-16.9c-3.3-2.8-7-5.8-7-10.6z"/>
+          <rect x="36" y="69" width="28" height="7.5" rx="3.2"/>
+          <path d="M29.5 76.5h41l4.5 12h-50z"/>
+        </g>
+        <path d="M43 49h14" stroke="var(--pc-line)" stroke-width="2" opacity=".32" fill="none" stroke-linecap="round"/>
+      </symbol>
+
+      <symbol id="pc-rook" viewBox="0 0 100 100">
+        <g fill="currentColor" stroke="var(--pc-line)" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round">
+          <path d="M27 20h10.5v8h8v-8h9v8h8v-8H73v22l-6 4.5V72H33V46.5L27 42z"/>
+          <rect x="33" y="68" width="34" height="7" rx="2.5"/>
+          <path d="M28 75h44l4.5 13.5h-53z"/>
+        </g>
+        <path d="M39 39h22M39 58h22" stroke="var(--pc-line)" stroke-width="2" opacity=".3" fill="none" stroke-linecap="round"/>
+      </symbol>
+
+      <symbol id="pc-knight" viewBox="0 0 100 100">
+        <g fill="currentColor" stroke="var(--pc-line)" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round">
+          <path d="M64 10 70 22c10 6 16 18 18 31l-9 5-6-4-4 8-3 12H40c-2-13 4-25 15-33L34 50 27 37l18-12 3-10z"/>
+          <path d="M29.5 75h41l4.5 13.5h-50z"/>
+        </g>
+        <path d="M60 10 64 2l7 12" fill="currentColor" stroke="var(--pc-line)" stroke-width="2.4" stroke-linejoin="round"/>
+        <circle cx="73" cy="36" r="2.6" fill="var(--pc-line)" stroke="none"/>
+        <path d="M84 52c-2 1-4 1-6 0" stroke="var(--pc-line)" stroke-width="2" opacity=".55" fill="none" stroke-linecap="round"/>
+        <path d="M49 42c4 8 5 16 4 23" stroke="var(--pc-line)" stroke-width="2" opacity=".3" fill="none" stroke-linecap="round"/>
+      </symbol>
+
+      <symbol id="pc-bishop" viewBox="0 0 100 100">
+        <g fill="currentColor" stroke="var(--pc-line)" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round">
+          <circle cx="50" cy="11" r="3.6"/>
+          <path d="M50 18c-4 8-14 16-14 27 0 6 4 10 10 12h8c6-2 10-6 10-12 0-11-10-19-14-27z"/>
+          <path d="M34 57h32l2 9H32z"/>
+          <path d="M29.5 66h41l4.5 22h-50z"/>
+        </g>
+        <path d="M43 52l13-9" stroke="var(--pc-line)" stroke-width="3.4" opacity=".5" fill="none" stroke-linecap="round"/>
+        <path d="M50 27v10" stroke="var(--pc-line)" stroke-width="2" opacity=".4" fill="none" stroke-linecap="round"/>
+      </symbol>
+
+      <symbol id="pc-queen" viewBox="0 0 100 100">
+        <g fill="currentColor" stroke="var(--pc-line)" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round">
+          <circle cx="16" cy="30" r="4.4"/>
+          <circle cx="32" cy="14" r="4.4"/>
+          <circle cx="50" cy="9" r="4.4"/>
+          <circle cx="68" cy="14" r="4.4"/>
+          <circle cx="84" cy="30" r="4.4"/>
+          <path d="M23 62 16 30l12 10 4-26 12 22 6-26 6 26 12-22 4 26 12-10-7 32z"/>
+          <rect x="24" y="60" width="52" height="8" rx="3"/>
+          <path d="M29.5 68h41l4.5 20h-50z"/>
+        </g>
+        <path d="M36 52h28" stroke="var(--pc-line)" stroke-width="2" opacity=".28" fill="none" stroke-linecap="round"/>
+      </symbol>
+
+      <symbol id="pc-king" viewBox="0 0 100 100">
+        <g fill="currentColor" stroke="var(--pc-line)" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round">
+          <path d="M45 5h10v7h7v10h-7v7H45v-7h-7V12h7z"/>
+          <path d="M22 34 18 62h64l-4-28-14 14-14-20-14 20z"/>
+          <rect x="24" y="60" width="52" height="8" rx="3"/>
+          <path d="M29.5 68h41l4.5 20h-50z"/>
+        </g>
+        <path d="M36 52h28" stroke="var(--pc-line)" stroke-width="2" opacity=".28" fill="none" stroke-linecap="round"/>
+      </symbol>
+    </defs>
+  </svg>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
