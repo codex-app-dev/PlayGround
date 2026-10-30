@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#07110e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="description" content="Power Shift — chess where every capture swaps the pieces' movement powers.">
+  <title>Power Shift — Chess, rewritten</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%2307110e'/%3E%3Cpath d='M20 18h8v9h8v-9h8v9h8v16l-7 6v8H27v-8l-7-6V18Z' fill='%23c8ff6a'/%3E%3Cpath d='M17 50h30' stroke='%23f0e6ce' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="preload" href="assets/fonts/manrope.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/fraunces.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="ambient" aria-hidden="true">
+    <span class="ambient-orb ambient-orb-a"></span>
+    <span class="ambient-orb ambient-orb-b"></span>
+    <span class="ambient-grain"></span>
+  </div>
+
+  <div class="app">
+    <header class="topbar">
+      <div class="brand" aria-label="Power Shift">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 48 48" fill="none">
+            <path d="M10 13h7v7h7v-7h7v7h7v12l-6 5v6H16v-6l-6-5V13Z" fill="currentColor"/>
+            <path d="M12 35h24" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" opacity=".55"/>
+            <path d="M32 9h7M35.5 5.5v7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </span>
+        <span class="brand-copy">
+          <strong>POWER<span>SHIFT</span></strong>
+          <small>CHESS, REWRITTEN</small>
+        </span>
+      </div>
+
+      <div class="top-actions">
+        <div class="mode-pill" id="modePill">
+          <span class="mode-light"></span>
+          <span id="modeLabel">SOLO</span>
+          <span class="pill-divider">/</span>
+          <span id="levelLabel">SHARP</span>
+        </div>
+        <button class="icon-btn" id="soundBtn" type="button" aria-label="Mute sound" aria-pressed="true" title="Sound">
+          <svg class="icon icon-sound" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M5 9.5v5h3.2L13 18V6L8.2 9.5H5Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+            <path d="M16 9.2c1.1 1.5 1.1 4.1 0 5.6M18.6 7c2.4 2.7 2.4 7.3 0 10" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+          </svg>
+          <svg class="icon icon-muted" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M5 9.5v5h3.2L13 18V6L8.2 9.5H5Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+            <path d="m16.2 9.8 4.4 4.4m0-4.4-4.4 4.4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+          </svg>
+        </button>
+        <button class="icon-btn mobile-only" id="settingsBtn" type="button" aria-label="Match settings" title="Match settings">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M4 7h10M18 7h2M4 17h2M10 17h10" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+            <circle cx="16" cy="7" r="2.2" stroke="currentColor" stroke-width="1.7"/>
+            <circle cx="8" cy="17" r="2.2" stroke="currentColor" stroke-width="1.7"/>
+          </svg>
+        </button>
+        <button class="icon-btn" id="rulesBtn" type="button" aria-label="How to play" title="How to play">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle cx="12" cy="12" r="8.4" stroke="currentColor" stroke-width="1.7"/>
+            <path d="M9.7 9.2c.3-1.5 1.4-2.3 2.7-2.3 1.5 0 2.6.9 2.6 2.2 0 1.8-2.6 2.2-2.6 4.1" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+            <circle cx="12.3" cy="16.6" r="1" fill="currentColor"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <main class="main">
+      <section class="stage" aria-label="Power Shift game">
+        <div class="turn-strip" id="turnStrip">
+          <div class="player-card player-white is-active" id="whitePlayer">
+            <span class="player-swatch white"></span>
+            <span class="player-meta"><span class="player-name">Ivory</span><span class="player-caption">You</span></span>
+          </div>
+          <div class="turn-centre">
+            <span class="status-kicker" id="statusKicker">WHITE TO MOVE</span>
+            <span class="status-sub" id="statusSub">Tap a piece to begin</span>
+          </div>
+          <div class="player-card player-black" id="blackPlayer">
+            <span class="player-meta"><span class="player-name">Obsidian</span><span class="player-caption">CPU</span></span>
+            <span class="player-swatch black"></span>
+          </div>
+        </div>
+
+        <div class="board-rig" id="boardRig">
+          <div class="board-frame">
+            <div class="frame-corner frame-corner-tl" aria-hidden="true"></div>
+            <div class="frame-corner frame-corner-tr" aria-hidden="true"></div>
+            <div class="frame-corner frame-corner-bl" aria-hidden="true"></div>
+            <div class="frame-corner frame-corner-br" aria-hidden="true"></div>
+            <div class="board" id="board" role="grid" aria-label="Chess board">
+              <div class="cells" id="cells" role="rowgroup"></div>
+              <div class="highlights" id="highlights" aria-hidden="true"></div>
+              <div class="piece-layer" id="pieceLayer"></div>
+              <div class="swap-pop" id="swapPop" aria-hidden="true"></div>
+            </div>
+          </div>
+          <div class="board-badge" id="boardBadge">
+            <span class="badge-icon" aria-hidden="true">⇄</span>
+            <span><strong>Capture</strong> = <strong>power swap</strong></span>
+          </div>
+        </div>
+
+        <div class="mobile-capture" id="mobileCapture" aria-live="polite">
+          <span class="mobile-capture-icon">⇄</span>
+          <span id="mobileCaptureText">Every capture rewrites a piece's movement.</span>
+        </div>
+
+        <section class="mobile-info" aria-label="Game information">
+          <div class="mobile-info-top">
+            <span class="panel-label">LAST CAPTURE</span>
+            <span class="swap-tag" id="mobileSwapTag">NO SWAPS YET</span>
+          </div>
+          <div class="capture-feed" id="mobileCaptureFeed">
+            <span class="capture-empty">The board is still balanced. Make the first move.</span>
+          </div>
+          <div class="mobile-captured">
+            <div class="captured-row">
+              <span class="captured-label">TAKEN BY IVORY</span>
+              <div class="captured-list" id="mobileCapturedByWhite"></div>
+            </div>
+            <div class="captured-row">
+              <span class="captured-label">TAKEN BY OBSIDIAN</span>
+              <div class="captured-list" id="mobileCapturedByBlack"></div>
+            </div>
+          </div>
+          <div class="mobile-rule">
+            <span class="rule-mark" aria-hidden="true">⇄</span>
+            <span>Capture = swap. The taker inherits the fallen piece's movement.</span>
+          </div>
+        </section>
+
+        <div class="mobile-dock">
+          <button class="dock-btn primary" id="newBtnMobile" type="button">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 4v16M4 12h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            <span>New</span>
+          </button>
+          <button class="dock-btn" id="undoBtnMobile" type="button">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 8 4.5 12 9 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 12h8.2a5 5 0 0 1 0 10H11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            <span>Undo</span>
+          </button>
+          <button class="dock-btn" id="tiltBtnMobile" type="button" aria-pressed="false">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="7.4" y="3.4" width="9.2" height="17.2" rx="2.4" stroke="currentColor" stroke-width="1.7"/><path d="M10.6 17.7h2.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="m4.2 9.2-1.6 2.8 1.6 2.8M19.8 9.2l1.6 2.8-1.6 2.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>Tilt</span>
+          </button>
+          <button class="dock-btn" id="movesBtnMobile" type="button">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4.5 6.5h15M4.5 12h15M4.5 17.5h9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            <span>Moves</span>
+          </button>
+        </div>
+      </section>
+
+      <aside class="side" aria-label="Game information">
+        <section class="panel status-panel">
+          <div class="panel-topline">
+            <span class="panel-label">POSITION</span>
+            <span class="move-count" id="moveCount">MOVE 1</span>
+          </div>
+          <div class="status-line">
+            <span class="turn-orb" id="turnOrb" aria-hidden="true"></span>
+            <div class="status-copy">
+              <h1 id="statusTitle">White to move</h1>
+              <p id="statusDescription">Choose a piece. Its badge shows how it moves.</p>
+            </div>
+            <span class="check-chip" id="checkChip" hidden>CHECK</span>
+          </div>
+          <div class="power-rule">
+            <span class="rule-mark" aria-hidden="true">⇄</span>
+            <div>
+              <strong>Capture = swap</strong>
+              <p>The taker inherits the taken piece's movement. The fallen piece is removed.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel capture-panel" id="capturePanel">
+          <div class="panel-topline">
+            <span class="panel-label">LAST CAPTURE</span>
+            <span class="swap-tag" id="swapTag">NO SWAPS YET</span>
+          </div>
+          <div class="capture-feed" id="captureFeed">
+            <span class="capture-empty">The board is still balanced. Make the first move.</span>
+          </div>
+          <div class="captured-row">
+            <span class="captured-label">TAKEN BY IVORY</span>
+            <div class="captured-list" id="capturedByWhite"></div>
+          </div>
+          <div class="captured-row">
+            <span class="captured-label">TAKEN BY OBSIDIAN</span>
+            <div class="captured-list" id="capturedByBlack"></div>
+          </div>
+        </section>
+
+        <section class="panel log-panel">
+          <div class="panel-topline">
+            <span class="panel-label">MOVE LOG</span>
+            <span class="log-hint">CAPTURES MARKED ⇄</span>
+          </div>
+          <div class="move-log" id="moveLog">
+            <div class="log-empty">No moves yet. White opens.</div>
+          </div>
+        </section>
+
+        <section class="panel controls-panel">
+          <div class="control-group">
+            <span class="control-label">MODE</span>
+            <div class="segmented" role="group" aria-label="Game mode">
+              <button class="seg-btn is-active" id="soloBtn" type="button" aria-pressed="true">Solo</button>
+              <button class="seg-btn" id="localBtn" type="button" aria-pressed="false">2 Player</button>
+            </div>
+          </div>
+          <div class="control-group">
+            <span class="control-label">CPU</span>
+            <div class="segmented" role="group" aria-label="CPU strength">
+              <button class="seg-btn" id="casualBtn" type="button" aria-pressed="false">Casual</button>
+              <button class="seg-btn is-active" id="sharpBtn" type="button" aria-pressed="true">Sharp</button>
+            </div>
+          </div>
+          <div class="control-actions">
+            <button class="wide-btn" id="undoBtn" type="button">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 8 4.5 12 9 16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 12h8.2a5 5 0 0 1 0 10H11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+              Undo
+            </button>
+            <button class="wide-btn primary" id="newBtn" type="button">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 4v16M4 12h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+              New game
+            </button>
+          </div>
+          <button class="tilt-toggle" id="tiltBtn" type="button" aria-pressed="false">
+            <span class="tilt-toggle-icon" aria-hidden="true">
+              <svg class="icon" viewBox="0 0 24 24" fill="none"><rect x="7.4" y="3.4" width="9.2" height="17.2" rx="2.4" stroke="currentColor" stroke-width="1.7"/><path d="M10.6 17.7h2.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="m4.2 9.2-1.6 2.8 1.6 2.8M19.8 9.2l1.6 2.8-1.6 2.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+            <span class="tilt-toggle-copy"><strong>Motion tilt</strong><small>Shift the board with your device</small></span>
+            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          </button>
+        </section>
+      </aside>
+    </main>
+
+    <footer class="footer">
+      <span class="footer-mark" aria-hidden="true">⇄</span>
+      <span>Every capture rewrites the board.</span>
+      <span class="footer-sep" aria-hidden="true"></span>
+      <span>Touch-first · 8×8 · two players</span>
+    </footer>
+  </div>
+
+  <dialog class="rules-dialog" id="rulesDialog">
+    <div class="dialog-head">
+      <div>
+        <span class="panel-label">THE TWIST</span>
+        <h2>Power travels.</h2>
+      </div>
+      <button class="icon-btn dialog-close" id="rulesClose" type="button" aria-label="Close rules">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <p class="dialog-lede">Power Shift is chess with a living board. Pieces keep their shape, but not their movement.</p>
+    <div class="rule-grid">
+      <article class="rule-tile">
+        <span class="rule-number">01</span>
+        <h3>Capture to swap</h3>
+        <p>When your piece captures, it inherits the captured piece's movement power. The captured piece leaves the board.</p>
+        <div class="rule-demo">
+          <span class="demo-piece">♞</span>
+          <span class="demo-arrow">×</span>
+          <span class="demo-piece">♜</span>
+          <span class="demo-arrow">→</span>
+          <span class="demo-badge">R</span>
+        </div>
+      </article>
+      <article class="rule-tile">
+        <span class="rule-number">02</span>
+        <h3>Read the badge</h3>
+        <p>A small badge appears whenever a piece's movement differs from its shape. A pawn with a queen badge moves like a queen.</p>
+        <div class="rule-demo">
+          <span class="demo-piece">♟</span>
+          <span class="demo-arrow">→</span>
+          <span class="demo-badge">Q</span>
+        </div>
+      </article>
+      <article class="rule-tile">
+        <span class="rule-number">03</span>
+        <h3>Protect the king</h3>
+        <p>Kings are still kings. Checkmate wins the game. Castling is only available while the king and rook still move like themselves.</p>
+        <div class="rule-demo">
+          <span class="demo-piece">♚</span>
+          <span class="demo-arrow">+</span>
+          <span class="demo-piece">♜</span>
+          <span class="demo-arrow">=</span>
+          <span class="demo-badge">castle</span>
+        </div>
+      </article>
+    </div>
+    <div class="dialog-foot">
+      <span>Tap a piece, then tap a highlighted square.</span>
+      <button class="wide-btn primary" id="rulesPlay" type="button">Back to board</button>
+    </div>
+  </dialog>
+
+  <dialog class="settings-dialog" id="settingsDialog">
+    <div class="dialog-head">
+      <div>
+        <span class="panel-label">MATCH SETUP</span>
+        <h2>Choose your table.</h2>
+      </div>
+      <button class="icon-btn dialog-close" id="settingsClose" type="button" aria-label="Close match settings">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="settings-body">
+      <div class="settings-row">
+        <div><strong>Mode</strong><span>Solo against the CPU, or pass and play.</span></div>
+        <div class="segmented" role="group" aria-label="Game mode">
+          <button class="seg-btn" id="settingsSolo" type="button" aria-pressed="false">Solo</button>
+          <button class="seg-btn" id="settingsLocal" type="button" aria-pressed="false">2 Player</button>
+        </div>
+      </div>
+      <div class="settings-row">
+        <div><strong>CPU strength</strong><span>Casual looks one move ahead. Sharp looks three.</span></div>
+        <div class="segmented" role="group" aria-label="CPU strength">
+          <button class="seg-btn" id="settingsCasual" type="button" aria-pressed="false">Casual</button>
+          <button class="seg-btn" id="settingsSharp" type="button" aria-pressed="false">Sharp</button>
+        </div>
+      </div>
+    </div>
+    <div class="dialog-foot">
+      <span>Settings apply to the current game.</span>
+      <button class="wide-btn primary" id="settingsDone" type="button">Done</button>
+    </div>
+  </dialog>
+
+  <dialog class="moves-dialog" id="movesDialog">
+    <div class="dialog-head">
+      <div>
+        <span class="panel-label">GAME RECORD</span>
+        <h2>Move log</h2>
+      </div>
+      <button class="icon-btn dialog-close" id="movesClose" type="button" aria-label="Close move log">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="move-log move-log-dialog" id="moveLogMobile"></div>
+  </dialog>
+
+  <div class="game-over" id="gameOver" hidden>
+    <div class="game-over-card">
+      <span class="game-over-kicker" id="gameOverKicker">CHECKMATE</span>
+      <h2 id="gameOverTitle">Ivory wins.</h2>
+      <p id="gameOverText">The king has nowhere left to go.</p>
+      <div class="game-over-actions">
+        <button class="wide-btn primary" id="playAgainBtn" type="button">Play again</button>
+        <button class="wide-btn" id="reviewBtn" type="button">Review board</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
