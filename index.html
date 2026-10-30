@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Canyon Overdrive — Mobile Assault</title>
+  <meta name="description" content="A neon canyon flight shooter built for phone and tablet. Drag or tilt to fly, auto-cannons engage, missiles and barrel rolls keep you alive." />
+  <meta name="theme-color" content="#070510" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Canyon Overdrive" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23070510'/%3E%3Cpath d='M12 44 32 12l20 32-20-9z' fill='%232ef2ff'/%3E%3Cpath d='M22 39 32 23l10 16-10-4z' fill='%23ff2f92'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="./styles.css" />
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "./vendor/three.module.js",
+        "three/addons/": "./vendor/addons/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div id="app">
+    <canvas id="game" aria-label="Canyon Overdrive, a neon canyon flight shooter"></canvas>
+
+    <div id="fx-grain" aria-hidden="true"></div>
+    <div id="fx-vignette" aria-hidden="true"></div>
+    <div id="fx-damage" aria-hidden="true"></div>
+    <div id="fx-speed" aria-hidden="true"></div>
+
+    <div id="hud" aria-hidden="true">
+      <div class="hud-top">
+        <div class="hud-brand">
+          <span class="brand-mark">CO</span>
+          <span class="brand-copy"><b>CANYON</b><i>OVERDRIVE</i></span>
+        </div>
+
+        <div class="hud-sector">
+          <div class="sector-line">
+            <span id="hud-sector">SECTOR 01 / OPEN BADLANDS</span>
+            <span id="hud-wave">WAVE 01</span>
+          </div>
+          <div class="sector-track"><i id="hud-progress"></i></div>
+          <div id="hud-objective">CLEAR THE CANYON</div>
+        </div>
+
+        <div class="hud-score-wrap">
+          <span class="eyebrow">SCORE</span>
+          <strong id="hud-score">000000</strong>
+          <span id="hud-combo">×1</span>
+          <button id="btn-pause" class="icon-btn" aria-label="Pause game">Ⅱ</button>
+        </div>
+      </div>
+
+      <div class="hud-left">
+        <div class="panel hull-panel">
+          <div class="panel-label"><span>HULL</span><b id="hud-hull">100</b></div>
+          <div class="bar hull-bar"><i id="hud-hull-fill"></i></div>
+        </div>
+        <div class="panel boost-panel">
+          <div class="panel-label"><span>AFTERBURNER</span><b id="hud-boost-label">READY</b></div>
+          <div class="bar boost-bar"><i id="hud-boost-fill"></i></div>
+        </div>
+        <div class="panel missile-panel">
+          <div class="panel-label"><span>MISSILES</span><b id="hud-missile-label">3</b></div>
+          <div class="missile-pips" id="hud-missiles"><i></i><i></i><i></i></div>
+        </div>
+      </div>
+
+      <div class="hud-right">
+        <div class="telemetry">
+          <div><b id="hud-speed">180</b><span>KM/H</span></div>
+          <div><b id="hud-distance">0.00</b><span>KM</span></div>
+        </div>
+      </div>
+
+      <div class="reticle" id="reticle" aria-hidden="true">
+        <i></i><i></i><i></i><i></i><span></span>
+      </div>
+      <div id="hud-lock" aria-hidden="true"><span>LOCK</span><i></i></div>
+
+      <div id="boss-hud" hidden>
+        <div class="boss-head"><span id="boss-name">THE ANVIL</span><b id="boss-phase">SHIELDS ONLINE</b></div>
+        <div class="boss-track"><i id="boss-fill"></i></div>
+        <div id="boss-nodes"><span></span><span></span><span></span></div>
+      </div>
+
+      <div id="callout" role="status">
+        <span class="eyebrow" id="callout-kicker">SECTOR 01</span>
+        <strong id="callout-title">OPEN BADLANDS</strong>
+        <p id="callout-detail">Stay low. The canyon is watching.</p>
+      </div>
+
+      <div id="combo-pop" aria-hidden="true"></div>
+
+      <div id="touch-controls">
+        <div id="stick-zone" aria-hidden="true">
+          <div id="stick-ring">
+            <div id="stick-knob"></div>
+            <span class="stick-label">STEER</span>
+          </div>
+        </div>
+
+        <div id="tilt-chip" hidden>
+          <span class="tilt-dot"></span>
+          <b>TILT ACTIVE</b>
+          <button id="btn-recenter" aria-label="Recalibrate tilt">RECENTER</button>
+        </div>
+
+        <div id="action-cluster">
+          <button id="btn-boost" class="action-btn boost" aria-label="Hold for afterburner">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 5 13h5l-1 9 8-12h-5z"/></svg>
+            <span>BOOST</span>
+          </button>
+          <button id="btn-roll" class="action-btn roll" aria-label="Barrel roll">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3"/><path d="M18 3v4h-4M6 21v-4h4"/></svg>
+            <span>ROLL</span>
+          </button>
+          <button id="btn-missile" class="action-btn missile" aria-label="Fire missile volley">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3c3 1 5 3 6 6l-5 1-3-3zM12 7 5 14l-2 6 6-2 7-7M4 20l3-3"/></svg>
+            <span>MISSILE</span>
+            <b id="missile-count">3</b>
+          </button>
+        </div>
+      </div>
+
+      <div id="toast" role="status" aria-live="polite"></div>
+
+      <div class="hud-footer">
+        <span id="hud-controls">DRAG TO STEER · AUTO-CANNONS</span>
+        <span class="hud-seed">BUILD 09 · <b id="hud-fps">60</b> FPS</span>
+      </div>
+    </div>
+
+    <section id="screen-title" class="screen screen-title">
+      <div class="title-topbar">
+        <div class="logo-lockup">
+          <span class="logo-mark">CO</span>
+          <span class="logo-type"><b>CANYON</b><i>OVERDRIVE</i></span>
+        </div>
+        <div class="title-top-actions">
+          <button id="btn-settings" class="ghost-btn">SETTINGS</button>
+          <button id="btn-mute" class="ghost-btn" aria-pressed="false">SOUND ON</button>
+        </div>
+      </div>
+
+      <div class="title-main">
+        <div class="title-copy">
+          <div class="title-kicker"><span></span> MOBILE ASSAULT / 09</div>
+          <h1 class="title-word">
+            <span class="word-canyon">CANYON</span>
+            <span class="word-overdrive">OVERDRIVE</span>
+          </h1>
+          <p class="title-sub">Punch through the neon blockade.<br />Fly low. Hit hard. Do not stop.</p>
+
+          <div class="title-actions">
+            <button id="btn-start" class="primary-btn">
+              <span class="primary-glow"></span>
+              <span class="primary-label">LAUNCH RUN</span>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6"/></svg>
+            </button>
+            <button id="btn-manual" class="outline-btn">FLIGHT MANUAL</button>
+          </div>
+
+          <div class="tilt-row">
+            <button id="btn-tilt" class="toggle-card" role="switch" aria-checked="false">
+              <span class="toggle-icon">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="m9.5 12 5 0M12 9.5v5"/></svg>
+              </span>
+              <span class="toggle-copy"><b>ACCELEROMETER TILT</b><small id="tilt-help">Optional. Tap to enable on this device.</small></span>
+              <span class="toggle-switch"><i></i></span>
+            </button>
+          </div>
+
+          <div class="title-chips">
+            <span><b>01</b> DRAG OR TILT TO FLY</span>
+            <span><b>02</b> CANNONS AUTO-FIRE</span>
+            <span><b>03</b> BREAK THE BLOCKADE</span>
+          </div>
+        </div>
+
+        <div class="title-side">
+          <div class="side-card">
+            <span class="eyebrow">CURRENT MISSION</span>
+            <div class="mission-route">
+              <div class="route-node active"><i></i><b>OPEN BADLANDS</b><span>0–2.5 KM</span></div>
+              <div class="route-node"><i></i><b>THE NARROWS</b><span>2.5–5.0 KM</span></div>
+              <div class="route-node"><i></i><b>BLOCKADE</b><span>5.0 KM+</span></div>
+            </div>
+          </div>
+          <div class="side-card best-card">
+            <span class="eyebrow">BEST RUN</span>
+            <div class="best-score" id="best-score">000000</div>
+            <div class="best-meta"><span id="best-distance">0.00 KM</span><span id="best-kills">0 KILLS</span></div>
+          </div>
+          <p class="side-note">A fan-made mobile tribute to the arcade canyon shooter. Built with Three.js.</p>
+        </div>
+      </div>
+
+      <div class="title-footer">
+        <span><i class="status-dot"></i> FLIGHT SYSTEMS NOMINAL</span>
+        <span class="footer-mid">TOUCH / TILT / KEYBOARD</span>
+        <span>THREE.JS · WEBGL2</span>
+      </div>
+    </section>
+
+    <section id="screen-manual" class="screen screen-modal" hidden>
+      <div class="modal-card manual-card">
+        <div class="modal-head">
+          <div><span class="eyebrow">PILOT GUIDE</span><h2>How to fly.</h2></div>
+          <button id="btn-manual-close" class="close-btn" aria-label="Close flight manual">×</button>
+        </div>
+        <div class="manual-grid">
+          <div class="manual-item">
+            <span class="manual-key">DRAG</span>
+            <b>Steer</b>
+            <p>Drag anywhere in the lower left to bank and climb. The ship self-levels when you let go.</p>
+          </div>
+          <div class="manual-item">
+            <span class="manual-key">TILT</span>
+            <b>Optional motion</b>
+            <p>Enable the accelerometer on the title screen. On iPhone and iPad, iOS asks for motion permission — allow it to fly hands-free.</p>
+          </div>
+          <div class="manual-item">
+            <span class="manual-key">AUTO</span>
+            <b>Cannons fire themselves</b>
+            <p>Line up a bandit inside the reticle. Twin cannons auto-engage with a little aim assist.</p>
+          </div>
+          <div class="manual-item">
+            <span class="manual-key">MISSILE</span>
+            <b>Missile volley</b>
+            <p>Three charges. Missiles lock the nearest target and hit hard. Recharges over time.</p>
+          </div>
+          <div class="manual-item">
+            <span class="manual-key">ROLL</span>
+            <b>Barrel roll</b>
+            <p>A short invulnerable dodge. Roll through plasma and turret fire. Brief cooldown.</p>
+          </div>
+          <div class="manual-item">
+            <span class="manual-key">BOOST</span>
+            <b>Afterburner</b>
+            <p>Hold to burn forward and recharge. Releases refill the meter. Speed is survival.</p>
+          </div>
+        </div>
+        <div class="manual-desktop">
+          <span><kbd>WASD</kbd> / <kbd>ARROWS</kbd> STEER</span>
+          <span><kbd>SHIFT</kbd> BOOST</span>
+          <span><kbd>Z</kbd> MISSILE</span>
+          <span><kbd>X</kbd> ROLL</span>
+          <span><kbd>P</kbd> PAUSE</span>
+        </div>
+        <button id="btn-manual-done" class="primary-btn small"><span class="primary-label">READY</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6"/></svg></button>
+      </div>
+    </section>
+
+    <section id="screen-settings" class="screen screen-modal" hidden>
+      <div class="modal-card settings-card">
+        <div class="modal-head">
+          <div><span class="eyebrow">FLIGHT SYSTEMS</span><h2>Settings.</h2></div>
+          <button id="btn-settings-close" class="close-btn" aria-label="Close settings">×</button>
+        </div>
+        <div class="setting-row">
+          <div><b>Accelerometer tilt</b><p id="settings-tilt-help">Optional motion steering. iOS will request permission.</p></div>
+          <button id="btn-settings-tilt" class="mini-toggle" role="switch" aria-checked="false"><i></i></button>
+        </div>
+        <div class="setting-row">
+          <div><b>Invert tilt pitch</b><p>Swap climb and dive when using motion.</p></div>
+          <button id="btn-invert-tilt" class="mini-toggle" role="switch" aria-checked="false"><i></i></button>
+        </div>
+        <div class="setting-row">
+          <div><b>Steering sensitivity</b><p><span id="sensitivity-value">100%</span> — touch, tilt and keyboard.</p></div>
+          <input id="sensitivity" type="range" min="50" max="180" step="5" value="100" aria-label="Steering sensitivity" />
+        </div>
+        <div class="setting-row">
+          <div><b>Screen shake</b><p>Impact feedback. Turn off for a calmer flight.</p></div>
+          <button id="btn-shake" class="mini-toggle" role="switch" aria-checked="true"><i></i></button>
+        </div>
+        <div class="setting-row">
+          <div><b>Bloom quality</b><p>High adds the full neon glow. Auto reduces it on slower phones.</p></div>
+          <select id="quality" aria-label="Bloom quality">
+            <option value="auto">Auto</option>
+            <option value="high">High</option>
+            <option value="low">Low</option>
+          </select>
+        </div>
+        <div class="settings-note" id="motion-note">Motion sensors need a secure connection (HTTPS) and permission on iOS 13+.</div>
+        <button id="btn-settings-done" class="primary-btn small"><span class="primary-label">DONE</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6"/></svg></button>
+      </div>
+    </section>
+
+    <section id="screen-pause" class="screen screen-pause" hidden>
+      <div class="pause-card">
+        <span class="eyebrow">FLIGHT ON HOLD</span>
+        <h2>Take a breath.</h2>
+        <p>The canyon will wait.</p>
+        <div class="pause-stats">
+          <span><b id="pause-score">0</b>SCORE</span>
+          <span><b id="pause-distance">0.00</b>KM</span>
+          <span><b id="pause-kills">0</b>KILLS</span>
+        </div>
+        <button id="btn-resume" class="primary-btn"><span class="primary-label">RESUME FLIGHT</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6"/></svg></button>
+        <button id="btn-restart" class="outline-btn">RESTART RUN</button>
+        <button id="btn-pause-settings" class="text-btn">SETTINGS</button>
+        <button id="btn-quit" class="text-btn">RETURN TO TITLE</button>
+      </div>
+    </section>
+
+    <section id="screen-over" class="screen screen-over" hidden>
+      <div class="over-card">
+        <span class="eyebrow" id="over-kicker">SIGNAL LOST</span>
+        <h2 id="over-title">Down in the dust.</h2>
+        <p id="over-detail">The canyon keeps what it catches.</p>
+        <div class="over-score" id="over-score">0</div>
+        <span class="eyebrow">FINAL SCORE</span>
+        <div class="over-stats">
+          <span><b id="over-distance">0.00</b>KM FLOWN</span>
+          <span><b id="over-kills">0</b>HOSTILES</span>
+          <span><b id="over-time">0:00</b>FLIGHT TIME</span>
+          <span><b id="over-rank">D</b>RANK</span>
+        </div>
+        <div class="over-actions">
+          <button id="btn-retry" class="primary-btn"><span class="primary-label">FLY AGAIN</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6"/></svg></button>
+          <button id="btn-title" class="outline-btn">TITLE SCREEN</button>
+        </div>
+        <div class="over-best">PERSONAL BEST <b id="over-best">0</b></div>
+      </div>
+    </section>
+
+    <div id="rotate-hint" aria-hidden="true">
+      <span>↻</span>
+      <b>LANDSCAPE RECOMMENDED</b>
+      <p>Turn your device for a wider canyon. Portrait works too.</p>
+    </div>
+
+    <div id="boot" aria-live="polite">
+      <div class="boot-mark">CO</div>
+      <div class="boot-copy"><b>CANYON OVERDRIVE</b><span id="boot-status">INITIALIZING FLIGHT SYSTEMS</span></div>
+      <div class="boot-track"><i id="boot-fill"></i></div>
+    </div>
+  </div>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
