@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+    <meta name="theme-color" content="#120b2c" />
+    <meta name="description" content="Gravity Grand Prix — a 3D anti-gravity kart racer." />
+    <title>Gravity Grand Prix</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23120b2c'/%3E%3Ctext x='32' y='46' font-family='Arial Black,sans-serif' font-size='38' font-weight='900' font-style='italic' text-anchor='middle' fill='%2354f7ff'%3EG%3C/text%3E%3C/svg%3E" />
+    <script type="module" crossorigin src="./assets/index-D700imrX.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-Cik0W14_.css">
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="game" aria-label="Gravity Grand Prix game"></canvas>
+      <div class="screen-vignette"></div>
+      <div id="boost-fx"></div>
+      <div id="flash"></div>
+
+      <div id="hud" class="hidden">
+        <header class="hud-top">
+          <div class="hud-card position-card">
+            <span class="eyebrow">POSITION</span>
+            <div class="position-line"><span id="position">8</span><span id="position-suffix" class="suffix">TH</span><span class="of">/8</span></div>
+            <div class="lap-line">LAP <strong id="lap">1</strong><span>/4</span></div>
+          </div>
+
+          <div class="race-clock">
+            <span class="eyebrow">RACE TIME</span>
+            <span id="race-time">00:00.00</span>
+          </div>
+
+          <div class="hud-card map-card">
+            <div class="map-head"><span class="eyebrow">ORBIT MAP</span><span class="live-dot"></span></div>
+            <canvas id="minimap" width="168" height="168"></canvas>
+          </div>
+        </header>
+
+        <div id="gravity-chip" class="gravity-chip">
+          <span class="gravity-icon">▲</span>
+          <span id="gravity-label">GRAVITY LOCK</span>
+          <span class="gravity-bars"><i></i><i></i><i></i></span>
+        </div>
+
+        <div id="banner" class="banner" aria-live="polite">
+          <span id="banner-kicker"></span>
+          <strong id="banner-text"></strong>
+          <span id="banner-sub"></span>
+        </div>
+
+        <div id="countdown" class="countdown" aria-live="assertive"></div>
+
+        <div class="hud-bottom">
+          <div class="bottom-left">
+            <div id="item-slot" class="item-slot empty">
+              <div class="item-label">ITEM</div>
+              <div class="item-orb"><span id="item-icon">?</span></div>
+              <div id="item-name" class="item-name">EMPTY</div>
+            </div>
+            <div class="coin-pill"><span class="coin-glyph">●</span><span id="coin-count">0</span><span class="coin-max">/10</span></div>
+          </div>
+
+          <div class="bottom-right">
+            <div class="drift-wrap">
+              <span class="drift-label">DRIFT</span>
+              <div class="drift-bars"><i></i><i></i><i></i></div>
+            </div>
+            <div id="speedo" class="speedo">
+              <div class="speedo-inner">
+                <span id="speed-value">0</span>
+                <small>KM/H</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="touch-controls">
+          <div class="touch-steer">
+            <button class="touch-btn steer" data-control="left" aria-label="Steer left">◀</button>
+            <button class="touch-btn steer" data-control="right" aria-label="Steer right">▶</button>
+          </div>
+          <div class="touch-actions">
+            <button class="touch-btn drift" data-control="drift" aria-label="Drift">DRIFT</button>
+            <button class="touch-btn item" data-control="item" aria-label="Use item">ITEM</button>
+          </div>
+        </div>
+
+        <button id="pause-btn" class="icon-btn pause-btn" aria-label="Pause">Ⅱ</button>
+      </div>
+
+      <section id="menu" class="menu">
+        <div class="menu-noise"></div>
+        <div class="menu-topline">
+          <span class="season-tag">SEASON 01</span>
+          <span class="orbit-tag">THE ORBITAL CIRCUIT</span>
+        </div>
+        <div class="menu-copy">
+          <div class="hero-mark"><span></span>ANTI-GRAVITY RACING</div>
+          <h1 class="logo">
+            <span class="logo-gravity">GRAVITY</span>
+            <span class="logo-grand">GRAND PRIX</span>
+          </h1>
+          <p class="tagline">Defy the track. <em>Flip the sky.</em></p>
+          <div class="menu-actions">
+            <button id="start-btn" class="start-btn">
+              <span class="start-glow"></span>
+              <span class="start-label">START ENGINE</span>
+              <span class="start-key">ENTER</span>
+            </button>
+            <div class="menu-meta">
+              <span>4 LAPS</span><i></i><span>8 RACERS</span><i></i><span>2 GRAVITY FLIPS</span>
+            </div>
+          </div>
+        </div>
+        <div class="control-strip">
+          <div><kbd>W</kbd><kbd>↑</kbd><span>ACCELERATE</span></div>
+          <div><kbd>A</kbd><kbd>D</kbd><span>STEER</span></div>
+          <div><kbd>SPACE</kbd><span>DRIFT</span></div>
+          <div><kbd>E</kbd><span>ITEM</span></div>
+        </div>
+        <div class="menu-foot">
+          <span>Built for the sky</span>
+          <span class="menu-foot-right">OMGRAVITY RACING DIVISION</span>
+        </div>
+      </section>
+
+      <section id="results" class="results hidden">
+        <div class="results-panel">
+          <div class="results-head">
+            <span class="eyebrow">RACE COMPLETE</span>
+            <h2 id="results-title">PODIUM FINISH</h2>
+            <p id="results-sub">The orbital circuit is yours.</p>
+          </div>
+          <div class="results-stats">
+            <div><span>TOTAL TIME</span><strong id="result-time">00:00.00</strong></div>
+            <div><span>BEST LAP</span><strong id="result-best">00:00.00</strong></div>
+            <div><span>TOP SPEED</span><strong id="result-speed">0 KM/H</strong></div>
+          </div>
+          <div id="standings" class="standings"></div>
+          <button id="restart-btn" class="start-btn compact"><span class="start-glow"></span><span class="start-label">RACE AGAIN</span><span class="start-key">R</span></button>
+        </div>
+      </section>
+
+      <section id="pause" class="pause hidden">
+        <div class="pause-panel">
+          <span class="eyebrow">RACE PAUSED</span>
+          <h2>TAKE A BREATH</h2>
+          <p>The sky will wait.</p>
+          <button id="resume-btn" class="start-btn compact"><span class="start-glow"></span><span class="start-label">RESUME</span><span class="start-key">P</span></button>
+          <button id="quit-btn" class="text-btn">RESTART RACE</button>
+        </div>
+      </section>
+
+      <button id="sound-btn" class="icon-btn sound-btn" aria-label="Toggle sound">
+        <span id="sound-icon">◖</span>
+      </button>
+      <div id="loading" class="loading">
+        <div class="loading-mark">G</div>
+        <div class="loading-text">CALIBRATING GRAVITY</div>
+      </div>
+    </div>
+  </body>
+</html>
