@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b0f0e" />
+  <meta name="description" content="Last Circle — drop, loot, build, and survive a stylized 3D battle royale on Isla Verde." />
+  <title>Last Circle — Tactical Battle Royale</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230b0f0e'/%3E%3Ccircle cx='32' cy='32' r='17' fill='none' stroke='%23f2c14e' stroke-width='4'/%3E%3Cpath d='M32 9v12M32 43v12M9 32h12M43 32h12' stroke='%23f2c14e' stroke-width='4'/%3E%3C/svg%3E" />
+  <link rel="preload" href="./fonts/barlow-condensed-800.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="./fonts/ibm-plex-mono-500.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="./src/style.css" />
+</head>
+<body>
+  <div id="stage" aria-hidden="true">
+    <canvas id="game"></canvas>
+    <div class="stage-vignette"></div>
+    <div class="stage-grain"></div>
+    <div id="damage-vignette"></div>
+    <div id="zone-vignette"></div>
+    <div id="heal-vignette"></div>
+    <div id="scope-overlay"></div>
+  </div>
+
+  <div id="boot" class="screen boot">
+    <div class="boot-mark">
+      <svg viewBox="0 0 100 100" width="54" height="54" aria-hidden="true"><circle cx="50" cy="50" r="30" fill="none" stroke="currentColor" stroke-width="2"/><path d="M50 8v18M50 74v18M8 50h18M74 50h18" stroke="currentColor" stroke-width="2"/><circle cx="50" cy="50" r="4" fill="currentColor"/></svg>
+    </div>
+    <div class="boot-copy">
+      <span class="eyebrow">TACTICAL BATTLE ROYALE</span>
+      <h1>LAST CIRCLE</h1>
+      <p id="boot-status">Surveying Isla Verde…</p>
+      <div class="boot-track"><i></i></div>
+    </div>
+  </div>
+
+  <div id="hud" class="hidden" aria-live="off">
+    <div class="hud-top">
+      <div class="brand">
+        <span class="brand-mark"><i></i></span>
+        <div class="brand-copy"><strong>LAST CIRCLE</strong><span>ISLA VERDE · BR-01</span></div>
+      </div>
+
+      <div class="compass-shell">
+        <canvas id="compass" width="600" height="54"></canvas>
+        <i class="compass-pip"></i>
+      </div>
+
+      <div class="match-stack">
+        <div class="match-count"><span>ALIVE</span><strong id="alive-count">24</strong></div>
+        <div class="zone-readout">
+          <span id="zone-label">ZONE</span>
+          <strong id="zone-clock">0:35</strong>
+        </div>
+      </div>
+    </div>
+
+    <aside class="minimap-wrap" id="minimap-wrap" title="Open tactical map (M)">
+      <div class="minimap-frame">
+        <canvas id="minimap" width="512" height="512"></canvas>
+        <div class="minimap-scan"></div>
+        <span class="corner c1"></span><span class="corner c2"></span><span class="corner c3"></span><span class="corner c4"></span>
+      </div>
+      <div class="minimap-meta">
+        <span id="location-name">ISLA VERDE</span>
+        <span class="coord" id="coord-readout">X 000 · Z 000</span>
+      </div>
+    </aside>
+
+    <div id="killfeed" class="killfeed"></div>
+
+    <div id="phase-banner" class="phase-banner">
+      <span id="phase-kicker">ZONE PHASE 01</span>
+      <strong id="phase-title">THE CIRCLE IS CLOSING</strong>
+    </div>
+
+    <div id="drop-readout" class="drop-readout hidden">
+      <span>ALTITUDE</span>
+      <strong id="altitude">180</strong><em>M</em>
+      <p id="drop-hint">STEER WITH WASD · CHUTE AUTO-DEPLOYS AT 55M</p>
+    </div>
+
+    <div id="crosshair" class="crosshair">
+      <i class="ch ch-n"></i><i class="ch ch-e"></i><i class="ch ch-s"></i><i class="ch ch-w"></i>
+      <b class="ch-dot"></b>
+      <span id="hitmarker" class="hitmarker"><i></i><i></i><i></i><i></i></span>
+    </div>
+
+    <div id="interact-prompt" class="interact-prompt"></div>
+
+    <div class="vitals-panel">
+      <div class="vitals-head">
+        <span>OPERATOR VITALS</span>
+        <span id="health-state">STABLE</span>
+      </div>
+      <div class="vital-row armor-row">
+        <span class="vital-icon">A</span>
+        <div class="vital-track"><i id="armor-fill"></i></div>
+        <b id="armor-value">0</b>
+      </div>
+      <div class="vital-row health-row">
+        <span class="vital-icon">H</span>
+        <div class="vital-track"><i id="health-fill"></i></div>
+        <b id="health-value">100</b>
+      </div>
+      <div class="vitals-foot">
+        <span><b>MEDKIT</b> ×<em id="med-count">2</em></span>
+        <span class="key-hint">F HEAL</span>
+        <span id="kills-readout"><b>KILLS</b> <em id="kill-count">0</em></span>
+      </div>
+    </div>
+
+    <div class="weapon-panel">
+      <div class="weapon-head">
+        <span id="fire-mode">AUTO</span>
+        <span id="weapon-type">ASSAULT RIFLE</span>
+      </div>
+      <div class="weapon-name" id="weapon-name">RANGER AR</div>
+      <div class="ammo-line"><strong id="mag-ammo">30</strong><span>/</span><em id="reserve-ammo">90</em></div>
+      <div class="reload-track"><i id="reload-fill"></i></div>
+      <div class="weapon-slots" id="weapon-slots"></div>
+      <div class="weapon-hint"><span>R</span> RELOAD <span>B</span> BUILD</div>
+    </div>
+
+    <div id="build-bar" class="build-bar hidden">
+      <div class="build-head">
+        <span><i></i> BUILD MODE</span>
+        <span>WOOD <strong id="wood-count">150</strong></span>
+      </div>
+      <div class="build-pieces">
+        <button class="build-piece active" data-piece="wall"><kbd>1</kbd><span>WALL</span><em>10</em></button>
+        <button class="build-piece" data-piece="floor"><kbd>2</kbd><span>FLOOR</span><em>10</em></button>
+        <button class="build-piece" data-piece="ramp"><kbd>3</kbd><span>RAMP</span><em>10</em></button>
+      </div>
+      <div class="build-hint"><span>CLICK</span> PLACE · <span>B</span> EXIT</div>
+    </div>
+
+    <div id="toast-stack" class="toast-stack"></div>
+    <div id="control-hint" class="control-hint">
+      <span>WASD</span> MOVE <span>SHIFT</span> SPRINT <span>SPACE</span> JUMP <span>LMB</span> FIRE <span>B</span> BUILD
+    </div>
+
+    <div id="touch-ui" class="touch-ui">
+      <div id="joystick" class="joystick"><div class="joystick-ring"></div><div id="stick-knob" class="joystick-knob"></div></div>
+      <div class="touch-side">
+        <button id="touch-build" class="tbtn tbtn-build tbtn-small" aria-label="Build">BUILD</button>
+        <button id="touch-heal" class="tbtn tbtn-heal tbtn-small" aria-label="Heal">HEAL</button>
+        <button id="touch-swap" class="tbtn tbtn-swap tbtn-small" aria-label="Swap weapon">SWAP</button>
+        <button id="touch-reload" class="tbtn tbtn-reload tbtn-small" aria-label="Reload">RELOAD</button>
+        <button id="touch-jump" class="tbtn tbtn-jump" aria-label="Jump">JUMP</button>
+        <button id="touch-fire" class="tbtn tbtn-fire" aria-label="Fire">FIRE</button>
+      </div>
+    </div>
+  </div>
+
+  <section id="menu" class="screen menu">
+    <div class="menu-shade"></div>
+    <header class="menu-top">
+      <div class="wordmark"><span class="wordmark-sigil">LC</span><span>LAST CIRCLE<em>TACTICAL BATTLE ROYALE</em></span></div>
+      <div class="menu-meta"><span>SEASON 01</span><span>SOLO // 24</span><span class="live-dot">LIVE</span></div>
+    </header>
+
+    <div class="menu-body">
+      <div class="hero-copy">
+        <p class="eyebrow"><span></span>ISLA VERDE · 14:20 LOCAL</p>
+        <h1>LAST<br /><span>CIRCLE</span></h1>
+        <p class="tagline">Drop into a hostile island. Loot what you can.<br />Build cover where there is none. <b>Be the last one standing.</b></p>
+        <div class="hero-actions">
+          <button id="deploy" class="deploy-btn" aria-label="Play">
+            <span class="deploy-glyph">▶</span>
+            <span class="deploy-copy"><strong>PLAY</strong><small>DEPLOY SOLO</small></span>
+            <span class="deploy-arrow">↗</span>
+          </button>
+          <div class="match-facts"><span>24 OPERATORS</span><span>5 ZONE PHASES</span><span>1 WINNER</span></div>
+        </div>
+        <div class="feature-row">
+          <div><b>01</b><span>DROP</span><small>Steer the descent</small></div>
+          <div><b>02</b><span>LOOT</span><small>Gear up fast</small></div>
+          <div><b>03</b><span>BUILD</span><small>Make your cover</small></div>
+          <div><b>04</b><span>SURVIVE</span><small>Outlast the circle</small></div>
+        </div>
+      </div>
+
+      <aside class="briefing">
+        <div class="briefing-head"><span>MISSION BRIEF</span><em>// 01</em></div>
+        <div class="briefing-step"><b>01</b><div><strong>CHOOSE YOUR DROP</strong><p>Seven compounds. One shrinking circle. Steer clear of the blue wall.</p></div></div>
+        <div class="briefing-step"><b>02</b><div><strong>SCAVENGE THE ISLAND</strong><p>Rifles, shotguns, marksman rifles. Medkits, armor, ammunition.</p></div></div>
+        <div class="briefing-step"><b>03</b><div><strong>BUILD ON THE FLY</strong><p>Spend wood on walls, floors and ramps. Cover is temporary. Position is everything.</p></div></div>
+        <div class="controls-table">
+          <div><kbd>WASD</kbd><span>MOVE</span><kbd>SHIFT</kbd><span>SPRINT</span></div>
+          <div><kbd>LMB</kbd><span>FIRE</span><kbd>R</kbd><span>RELOAD</span></div>
+          <div><kbd>B</kbd><span>BUILD</span><kbd>F</kbd><span>HEAL</span></div>
+          <div><kbd>SPACE</kbd><span>JUMP</span><kbd>M</kbd><span>MAP</span></div>
+        </div>
+        <div class="briefing-foot"><span class="signal"></span> ALL SYSTEMS NOMINAL <em>v1.0</em></div>
+      </aside>
+    </div>
+
+    <footer class="menu-footer">
+      <span><i></i> OFFLINE SIMULATION · AI OPERATORS</span>
+      <span>DESKTOP + TOUCH</span>
+      <button id="sound-toggle" class="sound-toggle" aria-label="Toggle sound"><span>SOUND</span><b>ON</b></button>
+    </footer>
+  </section>
+
+  <section id="pause" class="screen pause hidden">
+    <div class="pause-card">
+      <span class="eyebrow">TACTICAL HOLD</span>
+      <h2>PAUSED</h2>
+      <p>The circle waits for no one. Ready when you are, operator.</p>
+      <button id="resume" class="solid-btn" aria-label="Resume"><span>RESUME</span><small>BACK TO THE ISLAND</small></button>
+      <button id="pause-map" class="ghost-btn">OPEN TACTICAL MAP</button>
+      <button id="quit" class="ghost-btn">ABANDON MATCH</button>
+      <div class="pause-controls"><span>ESC</span> RESUME · <span>M</span> MAP</div>
+    </div>
+  </section>
+
+  <section id="result" class="screen result hidden">
+    <div class="result-inner">
+      <span class="eyebrow" id="result-kicker">MATCH COMPLETE</span>
+      <h2 id="result-title">ELIMINATED</h2>
+      <p id="result-subtitle">The island claims another operator.</p>
+      <div class="result-stats">
+        <div><span>PLACEMENT</span><strong id="stat-placement">#12</strong></div>
+        <div><span>ELIMINATIONS</span><strong id="stat-kills">0</strong></div>
+        <div><span>DAMAGE DEALT</span><strong id="stat-damage">0</strong></div>
+        <div><span>SURVIVED</span><strong id="stat-time">0:00</strong></div>
+      </div>
+      <div class="result-actions">
+        <button id="redeploy" class="solid-btn" aria-label="Play again"><span>REDEPLOY</span><small>NEW MATCH</small></button>
+        <button id="result-menu" class="ghost-btn">MAIN MENU</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="map-screen" class="screen map-screen hidden">
+    <div class="map-head">
+      <div><span class="eyebrow">TACTICAL OVERVIEW</span><h2>ISLA VERDE</h2></div>
+      <div class="map-legend"><span><i class="legend-zone"></i> NEXT CIRCLE</span><span><i class="legend-safe"></i> SAFE ZONE</span><span><i class="legend-you"></i> YOU</span></div>
+      <button id="map-close" class="map-close" aria-label="Close map">✕</button>
+    </div>
+    <div class="map-canvas-wrap"><canvas id="big-map" width="1024" height="1024"></canvas><div class="map-grid"></div></div>
+    <div class="map-foot"><span>M / ESC TO CLOSE</span><span id="map-zone-label">ZONE PHASE 01</span><span>GRID 500M</span></div>
+  </section>
+
+  <div id="rotate-hint" class="rotate-hint"><span>↻</span> ROTATE FOR A WIDER VIEW</div>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
