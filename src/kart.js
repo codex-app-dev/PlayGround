@@ -2,18 +2,94 @@ import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { radialGlowTexture } from './utils.js';
 
+// Tiny studio-style cube map so gloss-black paint has something to reflect.
+function makeKartEnvironment() {
+  const make = (top, mid, bottom) => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 32;
+    canvas.height = 32;
+    const ctx = canvas.getContext('2d');
+    const gradient = ctx.createLinearGradient(0, 0, 0, 32);
+    gradient.addColorStop(0, top);
+    gradient.addColorStop(0.55, mid);
+    gradient.addColorStop(1, bottom);
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 32, 32);
+    return canvas;
+  };
+  const side = () => make('#3b2168', '#ff8b9a', '#160d2c');
+  const up = () => make('#1a0e36', '#4a2a78', '#8a4a8e');
+  const down = () => make('#100a20', '#1a0f2e', '#07040f');
+  const texture = new THREE.CubeTexture([side(), side(), up(), down(), side(), side()]);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.needsUpdate = true;
+  return texture;
+}
+
+const kartEnv = makeKartEnvironment();
+
 const wheelGeo = new THREE.CylinderGeometry(0.43, 0.43, 0.34, 12);
 wheelGeo.rotateZ(Math.PI / 2);
 const hubGeo = new THREE.CylinderGeometry(0.19, 0.19, 0.37, 10);
 hubGeo.rotateZ(Math.PI / 2);
-const tireMat = new THREE.MeshStandardMaterial({ color: 0x181226, roughness: 0.9, metalness: 0.1 });
-const darkMat = new THREE.MeshStandardMaterial({ color: 0x1a1430, roughness: 0.55, metalness: 0.35 });
-const chromeMat = new THREE.MeshStandardMaterial({ color: 0xb9b6d7, roughness: 0.25, metalness: 0.9 });
+const tireMat = new THREE.MeshStandardMaterial({ color: 0x141018, roughness: 0.88, metalness: 0.12 });
+const darkMat = new THREE.MeshStandardMaterial({ color: 0x121017, roughness: 0.42, metalness: 0.5, envMap: kartEnv, envMapIntensity: 0.7 });
+const chromeMat = new THREE.MeshStandardMaterial({ color: 0xd8d4e6, roughness: 0.16, metalness: 1, envMap: kartEnv, envMapIntensity: 1.3 });
 const shadowTex = radialGlowTexture('rgba(0,0,0,.65)', 'rgba(0,0,0,0)');
 const glowTex = radialGlowTexture('rgba(255,255,255,.7)', 'rgba(255,255,255,0)');
 const flameGeo = new THREE.ConeGeometry(0.2, 1.25, 6);
 flameGeo.rotateX(-Math.PI / 2);
 flameGeo.translate(0, 0, 0.55);
+
+
+
+// Black bat on a gold oval, used on the Bat kart's hood.
+function makeBatEmblem() {
+  const canvas = document.createElement('canvas');
+  canvas.width = 256;
+  canvas.height = 128;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#f5c518';
+  ctx.beginPath();
+  ctx.ellipse(128, 64, 122, 56, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#060608';
+  ctx.beginPath();
+  ctx.moveTo(128, 30);
+  ctx.lineTo(137, 50);
+  ctx.lineTo(151, 36);
+  ctx.lineTo(153, 60);
+  ctx.bezierCurveTo(184, 48, 224, 50, 248, 64);
+  ctx.bezierCurveTo(222, 68, 206, 74, 196, 84);
+  ctx.bezierCurveTo(208, 86, 220, 92, 228, 100);
+  ctx.bezierCurveTo(198, 94, 176, 96, 158, 108);
+  ctx.bezierCurveTo(149, 101, 139, 103, 128, 116);
+  ctx.bezierCurveTo(117, 103, 107, 101, 98, 108);
+  ctx.bezierCurveTo(80, 96, 58, 94, 28, 100);
+  ctx.bezierCurveTo(36, 92, 48, 86, 60, 84);
+  ctx.bezierCurveTo(50, 74, 34, 68, 8, 64);
+  ctx.bezierCurveTo(32, 50, 72, 48, 103, 60);
+  ctx.lineTo(105, 36);
+  ctx.lineTo(119, 50);
+  ctx.closePath();
+  ctx.fill();
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.anisotropy = 4;
+  return texture;
+}
+
+const batEmblem = makeBatEmblem();
+
+const batFinShape = new THREE.Shape();
+batFinShape.moveTo(0, 0);
+batFinShape.lineTo(0.78, 0.12);
+batFinShape.lineTo(0.64, 0.5);
+batFinShape.quadraticCurveTo(0.48, 0.38, 0.4, 0.64);
+batFinShape.quadraticCurveTo(0.27, 0.48, 0.18, 0.72);
+batFinShape.quadraticCurveTo(0.08, 0.52, 0, 0.58);
+batFinShape.closePath();
+const batFinGeo = new THREE.ShapeGeometry(batFinShape);
 
 export function createKart({
   color = 0xff3b5c,
@@ -26,10 +102,32 @@ export function createKart({
   const body = new THREE.Group();
   root.add(body);
 
-  const paint = new THREE.MeshStandardMaterial({ color, roughness: 0.32, metalness: 0.55 });
-  const paintLight = new THREE.MeshStandardMaterial({ color: accent, roughness: 0.35, metalness: 0.5 });
-  const suitMat = new THREE.MeshStandardMaterial({ color: suit, roughness: 0.75, metalness: 0.05 });
-  const helmetMat = new THREE.MeshStandardMaterial({ color, roughness: 0.28, metalness: 0.6 });
+  const paint = new THREE.MeshPhysicalMaterial({
+    color,
+    roughness: 0.22,
+    metalness: 0.62,
+    clearcoat: 1,
+    clearcoatRoughness: 0.14,
+    envMap: kartEnv,
+    envMapIntensity: 1.15,
+  });
+  const paintLight = new THREE.MeshStandardMaterial({
+    color: accent,
+    roughness: 0.26,
+    metalness: 0.78,
+    envMap: kartEnv,
+    envMapIntensity: 1.15,
+  });
+  const suitMat = new THREE.MeshStandardMaterial({ color: suit, roughness: 0.82, metalness: 0.08 });
+  const helmetMat = new THREE.MeshPhysicalMaterial({
+    color,
+    roughness: 0.18,
+    metalness: 0.68,
+    clearcoat: 1,
+    clearcoatRoughness: 0.1,
+    envMap: kartEnv,
+    envMapIntensity: 1.15,
+  });
   const visorMat = new THREE.MeshStandardMaterial({
     color: 0x12162c,
     roughness: 0.08,
@@ -69,6 +167,11 @@ export function createKart({
     const headlight = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 6), headlightMat);
     headlight.position.set(side * 0.5, 0.58, -2.06);
     body.add(headlight);
+
+    // Gold beltline trim along the flanks.
+    const trim = new THREE.Mesh(new RoundedBoxGeometry(0.055, 0.055, 2.25, 2, 0.02), paintLight);
+    trim.position.set(side * 0.965, 0.79, 0.02);
+    body.add(trim);
   }
 
   const seatBack = new THREE.Mesh(new RoundedBoxGeometry(0.92, 0.88, 0.26, 3, 0.1), darkMat);
@@ -114,7 +217,7 @@ export function createKart({
   torso.rotation.x = -0.16;
   driver.add(torso);
 
-  const belt = new THREE.Mesh(new THREE.CylinderGeometry(0.31, 0.31, 0.12, 10), darkMat);
+  const belt = new THREE.Mesh(new THREE.CylinderGeometry(0.31, 0.31, 0.12, 10), isPlayer ? paintLight : darkMat);
   belt.position.y = 0.48;
   driver.add(belt);
 
@@ -251,8 +354,16 @@ export function createKart({
   antenna.rotation.z = -0.1;
   body.add(antenna);
   const flag = new THREE.Mesh(
-    new THREE.PlaneGeometry(0.48, 0.3, 2, 1),
-    new THREE.MeshBasicMaterial({ color: accent, side: THREE.DoubleSide, toneMapped: false })
+    new THREE.PlaneGeometry(isPlayer ? 0.54 : 0.48, isPlayer ? 0.27 : 0.3, 2, 1),
+    isPlayer
+      ? new THREE.MeshStandardMaterial({
+          map: batEmblem,
+          transparent: true,
+          side: THREE.DoubleSide,
+          roughness: 0.42,
+          metalness: 0.3,
+        })
+      : new THREE.MeshBasicMaterial({ color: accent, side: THREE.DoubleSide, toneMapped: false })
   );
   flag.position.set(0.98, 1.92, 1.25);
   flag.rotation.y = 0.2;
@@ -261,7 +372,7 @@ export function createKart({
   if (isPlayer) {
     const marker = new THREE.Mesh(
       new THREE.ConeGeometry(0.22, 0.5, 4),
-      new THREE.MeshBasicMaterial({ color: 0x54f7ff, toneMapped: false })
+      new THREE.MeshBasicMaterial({ color: 0xf5c518, toneMapped: false })
     );
     marker.position.set(0, 3.2, 0);
     marker.rotation.x = Math.PI;
@@ -277,6 +388,89 @@ export function createKart({
   plate.position.set(0, 0.73, -2.2);
   body.add(plate);
 
+  let cape = null;
+  if (isPlayer) {
+    // Gold bat badge on the hood.
+    const badge = new THREE.Mesh(
+      new THREE.PlaneGeometry(1.02, 0.51),
+      new THREE.MeshStandardMaterial({
+        map: batEmblem,
+        transparent: true,
+        roughness: 0.34,
+        metalness: 0.3,
+        depthWrite: false,
+        polygonOffset: true,
+        polygonOffsetFactor: -2,
+      })
+    );
+    badge.position.set(0, 0.716, -1.56);
+    badge.rotation.x = -Math.PI / 2 - 0.08;
+    body.add(badge);
+
+    // Cowl ears.
+    for (const side of [-1, 1]) {
+      const ear = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.3, 4), helmetMat);
+      ear.position.set(side * 0.17, 1.5, -0.02);
+      ear.rotation.z = side * -0.16;
+      driver.add(ear);
+    }
+
+    // Scalloped cape draped over the seat.
+    const capeShape = new THREE.Shape();
+    capeShape.moveTo(-0.3, 0.5);
+    capeShape.lineTo(0.3, 0.5);
+    capeShape.lineTo(0.5, -0.28);
+    capeShape.quadraticCurveTo(0.32, -0.12, 0.16, -0.34);
+    capeShape.quadraticCurveTo(0, -0.14, -0.16, -0.34);
+    capeShape.quadraticCurveTo(-0.32, -0.12, -0.5, -0.28);
+    capeShape.closePath();
+    cape = new THREE.Mesh(
+      new THREE.ShapeGeometry(capeShape),
+      new THREE.MeshStandardMaterial({
+        color: 0x101014,
+        roughness: 0.8,
+        metalness: 0.12,
+        side: THREE.DoubleSide,
+      })
+    );
+    cape.position.set(0, 0.5, 0.62);
+    cape.rotation.x = 0.16;
+    driver.add(cape);
+
+    const capeBadge = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.5, 0.25),
+      new THREE.MeshStandardMaterial({
+        map: batEmblem,
+        transparent: true,
+        roughness: 0.4,
+        metalness: 0.3,
+        depthWrite: false,
+      })
+    );
+    capeBadge.position.set(0, 0.04, 0.012);
+    cape.add(capeBadge);
+
+    // Bat-wing fins on the rear spoiler.
+    for (const side of [-1, 1]) {
+      const fin = new THREE.Mesh(
+        batFinGeo,
+        new THREE.MeshStandardMaterial({
+          color: 0x050507,
+          roughness: 0.28,
+          metalness: 0.62,
+          side: THREE.DoubleSide,
+          envMap: kartEnv,
+          envMapIntensity: 1,
+        })
+      );
+      fin.position.set(side * 0.78, 1.14, 1.3);
+      fin.scale.set(side, 1, 1);
+      fin.rotation.y = side * -0.5;
+      fin.rotation.z = side * 0.12;
+      body.add(fin);
+    }
+  }
+
   root.userData.body = body;
   root.userData.driver = driver;
   root.userData.wheels = wheels;
@@ -285,6 +479,7 @@ export function createKart({
   root.userData.glow = glow;
   root.userData.shadow = shadow;
   root.userData.number = number;
+  root.userData.cape = cape;
   return root;
 }
 
@@ -326,6 +521,13 @@ export function updateKartVisual(kart, {
 
   const glow = kart.userData.glow;
   glow.material.opacity = 0.32 + (boosting ? 0.4 : 0) + Math.sin(time * 5) * 0.06;
+
+  const cape = kart.userData.cape;
+  if (cape) {
+    const target = 0.16 + Math.min(0.42, speed * 0.0042) + (boosting ? 0.16 : 0);
+    cape.rotation.x += (target - cape.rotation.x) * Math.min(1, dt * 5);
+    cape.rotation.z = Math.sin(time * 6 + kart.userData.number) * 0.045;
+  }
 
   if (isPlayer && kart.userData.marker) {
     const marker = kart.userData.marker;

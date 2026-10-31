@@ -23,16 +23,17 @@ import {
 } from './utils.js';
 
 const AI_DEFS = [
-  { name: 'NOVA', color: 0x3b9cff, accent: 0xb7f2ff, suit: 0x193b69 },
-  { name: 'JET', color: 0x38e37b, accent: 0xe4ffb7, suit: 0x184a3a },
-  { name: 'SUNNY', color: 0xffcf3d, accent: 0xfff2c0, suit: 0x654417 },
-  { name: 'VIOLET', color: 0xa06bff, accent: 0xf0d8ff, suit: 0x3a1d6b },
-  { name: 'MAGMA', color: 0xff7a3d, accent: 0xffd7b0, suit: 0x612416 },
-  { name: 'BUBBLE', color: 0xff65b0, accent: 0xffd5e8, suit: 0x64183f },
-  { name: 'GLITCH', color: 0x2ce6c4, accent: 0xc4fff7, suit: 0x124d50 },
+  { name: 'NOVA', color: 0x0a0a10, accent: 0xd9b45c, suit: 0x15151c },
+  { name: 'JET', color: 0x08090c, accent: 0xc9d4e6, suit: 0x111319 },
+  { name: 'SUNNY', color: 0x0d0b08, accent: 0xe8c88a, suit: 0x1a1711 },
+  { name: 'VIOLET', color: 0x0b0812, accent: 0xb58cff, suit: 0x161120 },
+  { name: 'MAGMA', color: 0x0d0806, accent: 0xff8a4c, suit: 0x1b110c },
+  { name: 'BUBBLE', color: 0x0c0810, accent: 0xff9ecb, suit: 0x190f17 },
+  { name: 'GLITCH', color: 0x060b0b, accent: 0x8ef2e4, suit: 0x0d1717 },
 ];
 
-const PLAYER_DEF = { name: 'YOU', color: 0xff3b5c, accent: 0xffd166, suit: 0xfff0e2 };
+// The player drives the Bat kart: gloss black, gold trim, bat emblem.
+const PLAYER_DEF = { name: 'YOU', color: 0x050507, accent: 0xd4af37, suit: 0x0b0b0f };
 
 const ITEM_DEFS = {
   turbo: { name: 'TURBO', glyph: '➤', tone: 'gold' },
