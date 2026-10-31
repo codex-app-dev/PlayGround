@@ -1,0 +1,19 @@
+{
+  "name": "last-circle",
+  "private": true,
+  "version": "1.0.0",
+  "description": "LAST CIRCLE - a 3D battle royale with base building, running in the browser.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0 --port 3002",
+    "build": "vite build --base ./",
+    "preview": "vite preview --host 0.0.0.0 --port 3002",
+    "test": "node --test tests/*.test.mjs"
+  },
+  "dependencies": {
+    "three": "^0.187.0"
+  },
+  "devDependencies": {
+    "vite": "^8.3.5"
+  }
+}

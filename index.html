@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#0b0d0e" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="description" content="LAST CIRCLE — a 30-player 3D battle royale with base building. Drop in, loot up, fortify and survive the shrinking zone." />
+    <title>LAST CIRCLE — Battle Royale</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%230b0d0e'/%3E%3Ccircle cx='32' cy='32' r='21' fill='none' stroke='%23ff7a18' stroke-width='4'/%3E%3Cpath d='M32 13v38M13 32h38' stroke='%23ff7a18' stroke-width='3'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="game" aria-label="LAST CIRCLE game view"></canvas>
+
+      <!-- ============ START SCREEN ============ -->
+      <section id="menu" class="screen">
+        <div class="menu-scrim"></div>
+        <div class="menu-frame">
+          <header class="menu-top">
+            <div class="brand">
+              <span class="brand-mark" aria-hidden="true">
+                <svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="15" fill="none" stroke="currentColor" stroke-width="2"/><path d="M20 5v30M5 20h30" stroke="currentColor" stroke-width="1.5"/><circle cx="20" cy="20" r="4" fill="currentColor"/></svg>
+              </span>
+              <span class="brand-name">OMGITHUB <em>//</em> OPERATIONS</span>
+            </div>
+            <div class="menu-meta">
+              <span class="live-dot"></span> BUILD 1.0.0 <span class="sep">/</span> SOLO <span class="sep">/</span> 30 PLAYERS
+            </div>
+          </header>
+
+          <div class="menu-main">
+            <div class="menu-hero">
+              <div class="eyebrow"><span class="bar"></span> TACTICAL BATTLE ROYALE</div>
+              <h1 class="title">LAST<span> CIRCLE</span></h1>
+              <p class="tagline">Drop in. Loot up. Fortify. Outlast.</p>
+              <p class="lede">
+                A 30-player survival shootout on a hand-built island. The zone never stops closing —
+                scavenge weapons, harvest timber, raise cover and be the last one breathing.
+              </p>
+
+              <div class="menu-actions">
+                <button id="startBtn" class="btn-primary" autofocus>
+                  <span class="btn-label">Start Game</span>
+                  <span class="btn-sub">Deploy to the island</span>
+                  <span class="btn-arrow" aria-hidden="true">▶</span>
+                </button>
+                <div class="menu-hint">
+                  <span><kbd>WASD</kbd> move</span>
+                  <span><kbd>MOUSE</kbd> aim</span>
+                  <span><kbd>Q</kbd> build</span>
+                </div>
+              </div>
+
+              <div class="feature-strip">
+                <div class="feature">
+                  <strong>FORTIFY</strong>
+                  <span>Harvest wood. Snap walls, ramps and floors in seconds.</span>
+                </div>
+                <div class="feature">
+                  <strong>SCAVENGE</strong>
+                  <span>Five weapons, armor, medkits and ammo across seven named sites.</span>
+                </div>
+                <div class="feature">
+                  <strong>SURVIVE</strong>
+                  <span>A shrinking play zone. 29 hostiles. Zero second chances.</span>
+                </div>
+              </div>
+            </div>
+
+            <aside class="menu-panel">
+              <div class="panel-head"><span>DEPLOYMENT BRIEF</span><span class="panel-code">LC-030</span></div>
+              <div class="brief-map">
+                <canvas id="briefMap" width="360" height="360" aria-hidden="true"></canvas>
+                <div class="map-grid"></div>
+                <div class="map-label n">N</div>
+                <div class="map-label e">E</div>
+                <div class="map-label s">S</div>
+                <div class="map-label w">W</div>
+                <span class="map-ping" style="left:53%;top:57%"></span>
+                <span class="map-zone"></span>
+              </div>
+              <div class="brief-stats">
+                <div><span>ISLAND</span><strong>4.2 km²</strong></div>
+                <div><span>SITES</span><strong>07</strong></div>
+                <div><span>MATCH</span><strong>~6 MIN</strong></div>
+              </div>
+              <div class="settings">
+                <label class="setting">
+                  <span>QUALITY</span>
+                  <select id="qualitySelect">
+                    <option value="high">HIGH</option>
+                    <option value="medium">MEDIUM</option>
+                    <option value="low">LOW</option>
+                  </select>
+                </label>
+                <label class="setting">
+                  <span>SENSITIVITY</span>
+                  <input id="sensRange" type="range" min="0.2" max="2.5" step="0.05" value="1" />
+                  <output id="sensOut">1.00</output>
+                </label>
+                <label class="setting toggle">
+                  <span>SOUND</span>
+                  <input id="soundToggle" type="checkbox" checked />
+                  <span class="switch" aria-hidden="true"></span>
+                </label>
+              </div>
+              <div class="panel-note">No downloads. No lobbies. One button.</div>
+            </aside>
+          </div>
+
+          <footer class="menu-foot">
+            <span>© 2026 LAST CIRCLE // A browser-native battle royale</span>
+            <span class="foot-controls">ESC pause · H heal · E interact · F harvest · 1–3 build pieces</span>
+          </footer>
+        </div>
+      </section>
+
+      <!-- ============ IN-MATCH HUD ============ -->
+      <section id="hud" class="hidden" aria-live="off">
+        <div class="hud-top">
+          <canvas id="compass" width="640" height="44"></canvas>
+          <div id="zoneBanner">
+            <span class="zone-kicker">PLAY ZONE</span>
+            <span id="zoneTimer">0:30</span>
+            <span id="zoneState" class="zone-state">CLOSING SOON</span>
+          </div>
+          <div class="match-counts">
+            <div class="count"><span id="aliveCount">30</span><small>ALIVE</small></div>
+            <div class="count divider"><span id="killCount">0</span><small>ELIMS</small></div>
+          </div>
+          <div id="killfeed"></div>
+        </div>
+
+        <div id="zoneWarning">
+          <strong>OUTSIDE THE PLAY ZONE</strong>
+          <span>MOVE TO SAFETY — TAKING DAMAGE</span>
+        </div>
+
+        <div id="crosshair">
+          <span class="ch-dot"></span>
+          <span class="ch-line t"></span><span class="ch-line b"></span>
+          <span class="ch-line l"></span><span class="ch-line r"></span>
+        </div>
+        <div id="hitmarker"><span></span><span></span><span></span><span></span></div>
+        <div id="damageDir"></div>
+        <div id="damageVignette"></div>
+
+        <div id="interactPrompt"><kbd>E</kbd><span id="interactText">PICK UP</span></div>
+        <div id="harvestPrompt"><kbd>F</kbd><span>HARVEST WOOD</span></div>
+        <div id="healProgress"><div class="heal-label">USING MEDKIT</div><div class="heal-track"><i></i></div></div>
+
+        <div id="buildHud">
+          <div class="build-title"><span>BUILD MODE</span><small>LEFT CLICK TO PLACE · R ROTATE · Q EXIT</small></div>
+          <div class="build-pieces">
+            <div class="piece" data-piece="wall"><b>1</b><span>WALL</span><em>10</em></div>
+            <div class="piece" data-piece="floor"><b>2</b><span>FLOOR</span><em>10</em></div>
+            <div class="piece" data-piece="ramp"><b>3</b><span>RAMP</span><em>10</em></div>
+          </div>
+          <div class="wood-count"><span class="wood-icon"></span><strong id="woodCount">40</strong><small>WOOD</small></div>
+        </div>
+
+        <div class="hud-bottom">
+          <div class="vitals">
+            <div class="vital-row">
+              <div class="vital-icon health"></div>
+              <div class="vital-track"><i id="healthFill"></i></div>
+              <strong id="healthNum">100</strong>
+            </div>
+            <div class="vital-row armor-row">
+              <div class="vital-icon armor"></div>
+              <div class="vital-track"><i id="armorFill"></i></div>
+              <strong id="armorNum">0</strong>
+            </div>
+            <div class="vital-sub">
+              <span><i class="chip med"></i><b id="medCount">0</b> MEDKITS <kbd>H</kbd></span>
+              <span class="mode-tag" id="stanceTag">STANDING</span>
+            </div>
+          </div>
+
+          <div class="weapon-panel">
+            <div class="weapon-name"><span id="weaponName">P92</span><small id="weaponMode">SEMI</small></div>
+            <div class="ammo"><strong id="magAmmo">15</strong><span>/</span><em id="reserveAmmo">60</em></div>
+            <div class="weapon-slots">
+              <div class="slot active" id="slot1"><b>1</b><span>—</span></div>
+              <div class="slot" id="slot2"><b>2</b><span>P92</span></div>
+            </div>
+            <div class="reload-hint" id="reloadHint"><kbd>R</kbd> RELOAD</div>
+          </div>
+
+          <div class="minimap-wrap">
+            <canvas id="minimap" width="240" height="240"></canvas>
+            <div class="minimap-ring"></div>
+            <div class="minimap-label">GRID 4.2</div>
+          </div>
+        </div>
+
+        <div id="toast"></div>
+        <div id="damageNumbers"></div>
+      </section>
+
+      <!-- ============ TOUCH CONTROLS ============ -->
+      <section id="touch" class="hidden">
+        <div id="stickZone" class="touch-zone"><div id="stickBase"><div id="stickKnob"></div></div></div>
+        <div id="lookZone" class="touch-zone"></div>
+        <div class="touch-buttons">
+          <button class="tbtn fire" data-act="fire" aria-label="Fire">FIRE</button>
+          <button class="tbtn aim" data-act="aim" aria-label="Aim">ADS</button>
+          <button class="tbtn jump" data-act="jump" aria-label="Jump">JUMP</button>
+          <button class="tbtn crouch" data-act="crouch" aria-label="Crouch">CROUCH</button>
+          <button class="tbtn reload" data-act="reload" aria-label="Reload">RELOAD</button>
+          <button class="tbtn interact" data-act="interact" aria-label="Interact">USE</button>
+          <button class="tbtn heal" data-act="heal" aria-label="Heal">HEAL</button>
+          <button class="tbtn build" data-act="build" aria-label="Build">BUILD</button>
+        </div>
+      </section>
+
+      <!-- ============ PAUSE ============ -->
+      <section id="pause" class="screen compact hidden">
+        <div class="pause-card">
+          <div class="eyebrow"><span class="bar"></span> OPERATION PAUSED</div>
+          <h2>HOLDING POSITION</h2>
+          <p>The play zone keeps closing while you are paused in real matches. Here, it waits.</p>
+          <div class="pause-actions">
+            <button id="resumeBtn" class="btn-primary small"><span class="btn-label">Resume</span></button>
+            <button id="quitBtn" class="btn-ghost">Abandon Match</button>
+          </div>
+          <div class="pause-keys">
+            <span><kbd>WASD</kbd> Move</span><span><kbd>SHIFT</kbd> Sprint</span><span><kbd>SPACE</kbd> Jump</span>
+            <span><kbd>CTRL</kbd> Crouch</span><span><kbd>RMB</kbd> Aim</span><span><kbd>R</kbd> Reload</span>
+            <span><kbd>Q</kbd> Build</span><span><kbd>F</kbd> Harvest</span><span><kbd>E</kbd> Interact</span>
+            <span><kbd>H</kbd> Medkit</span><span><kbd>M</kbd> Mute</span><span><kbd>ESC</kbd> Pause</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ MATCH END ============ -->
+      <section id="end" class="screen compact hidden">
+        <div class="end-card">
+          <div id="endKicker" class="eyebrow"><span class="bar"></span> MATCH COMPLETE</div>
+          <h2 id="endTitle">YOU DIED</h2>
+          <p id="endSub">The island claims another.</p>
+          <div class="placement">
+            <small>PLACEMENT</small>
+            <strong id="placement">#14</strong>
+            <span>OF 30</span>
+          </div>
+          <div class="end-stats">
+            <div><span>ELIMINATIONS</span><strong id="endKills">0</strong></div>
+            <div><span>DAMAGE</span><strong id="endDamage">0</strong></div>
+            <div><span>SURVIVED</span><strong id="endTime">0:00</strong></div>
+          </div>
+          <div class="end-actions">
+            <button id="againBtn" class="btn-primary"><span class="btn-label">Redeploy</span></button>
+            <button id="menuBtn" class="btn-ghost">Briefing</button>
+          </div>
+          <div class="end-note" id="endNote">Smart play. Bad luck. Run it again.</div>
+        </div>
+      </section>
+
+      <div id="rotateHint">
+        <span>ROTATE DEVICE</span>
+        <small>LAST CIRCLE plays best in landscape</small>
+      </div>
+
+      <noscript><div class="noscript">LAST CIRCLE needs JavaScript enabled.</div></noscript>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
