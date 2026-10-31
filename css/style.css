@@ -1,0 +1,197 @@
+/* ==========================================================================
+   Эпоха Тронов — interface style
+   Dark-fantasy glass, aged gold and cold steel. No external assets or fonts.
+   ========================================================================== */
+
+@import url("./menu.css");
+@import url("./hud.css");
+@import url("./modals.css");
+
+:root {
+  --bg: #060a0f;
+  --panel: rgba(9, 14, 20, 0.88);
+  --panel-solid: #0c131b;
+  --panel-2: rgba(15, 22, 31, 0.92);
+  --line: rgba(224, 189, 118, 0.2);
+  --line-strong: rgba(236, 199, 122, 0.46);
+  --gold: #e5bb68;
+  --gold-light: #f8dfa3;
+  --gold-deep: #a67b36;
+  --blue: #4c8dff;
+  --blue-soft: #8fc2ff;
+  --red: #ef5350;
+  --red-soft: #ff8b80;
+  --green: #8bd47d;
+  --text: #e9e2d2;
+  --text-soft: #c9c2b2;
+  --muted: #8e9aa6;
+  --shadow: 0 24px 70px rgba(0, 0, 0, 0.58);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --serif: "Palatino Linotype", "Book Antiqua", Georgia, "Times New Roman", serif;
+}
+
+* { box-sizing: border-box; }
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
+}
+
+body {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button {
+  appearance: none;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+button:focus-visible {
+  outline: 2px solid var(--gold-light);
+  outline-offset: 3px;
+}
+
+img,
+svg { display: block; }
+
+#app {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 58% 44%, rgba(45, 72, 93, 0.34), transparent 58%),
+    var(--bg);
+}
+
+#stage {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+#stage canvas,
+.stage-canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  touch-action: none;
+}
+
+.hidden { display: none !important; }
+
+.ico {
+  width: 1em;
+  height: 1em;
+  flex: 0 0 auto;
+}
+
+.crest {
+  width: 100%;
+  height: 100%;
+  color: currentColor;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.5));
+}
+
+/* Thin ornamental separators and shared shine effects. */
+.gold-rule {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--line-strong), transparent);
+}
+
+.glass {
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.035), transparent 38%),
+    linear-gradient(180deg, rgba(14, 21, 29, 0.95), rgba(7, 11, 16, 0.93));
+  border: 1px solid var(--line);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045), var(--shadow);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+/* Golden corner ticks used on the most important panels. */
+.cornered { position: relative; }
+.cornered::before,
+.cornered::after {
+  content: "";
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
+  border-color: var(--gold);
+  opacity: 0.62;
+}
+.cornered::before {
+  top: -1px;
+  left: -1px;
+  border-top: 1px solid;
+  border-left: 1px solid;
+}
+.cornered::after {
+  right: -1px;
+  bottom: -1px;
+  border-right: 1px solid;
+  border-bottom: 1px solid;
+}
+
+/* Scrollbars only in help/menu overflow areas. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(229, 187, 104, 0.32) rgba(0, 0, 0, 0.18);
+}
+*::-webkit-scrollbar { width: 7px; height: 7px; }
+*::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.18); }
+*::-webkit-scrollbar-thumb {
+  background: rgba(229, 187, 104, 0.3);
+  border-radius: 6px;
+}
+
+::selection {
+  background: rgba(229, 187, 104, 0.28);
+  color: #fff;
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes soft-pulse {
+  0%, 100% { opacity: 0.45; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.08); }
+}
+
+@keyframes sheen {
+  0% { transform: translateX(-130%) skewX(-18deg); }
+  100% { transform: translateX(260%) skewX(-18deg); }
+}
+
+@keyframes float-drift {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes spin-slow {
+  to { transform: rotate(360deg); }
+}

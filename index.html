@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
+  <meta name="theme-color" content="#0b1219" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230b1219'/%3E%3Cpath d='M32 7l20 7v14c0 12-8 20-20 26C20 48 12 40 12 28V14z' fill='none' stroke='%23e5bb68' stroke-width='3'/%3E%3Cpath d='M22 26l5-5 5 5 5-5 5 5M23 36c2 6 6 9 9 9s7-3 9-9' fill='none' stroke='%23e5bb68' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E" />
+  <meta name="description" content="Эпоха Тронов — 3D RTS в духе Warcraft с тремя расами: Альянс, Орда и Плеть." />
+  <title>Эпоха Тронов — 3D RTS</title>
+  <link rel="stylesheet" href="./css/style.css" />
+</head>
+<body>
+  <main id="app">
+    <div id="stage"></div>
+
+    <!-- Main menu -------------------------------------------------------->
+    <section id="menu" class="menu">
+      <div class="menu-shade"></div>
+      <div class="menu-content">
+        <div class="menu-left">
+          <div class="brand">
+            <div class="brand-kicker"><span></span> 3D REAL-TIME STRATEGY <span></span></div>
+            <h1><span>ЭПОХА</span><strong>ТРОНОВ</strong></h1>
+            <p class="brand-sub">Хроники трёх народов</p>
+            <p class="brand-lore">Три армии сошлись в Долине Трёх Ветров. Постройте крепость, соберите войско и сокрушите цитадель врага. Одна корона. Одна победа.</p>
+          </div>
+
+          <div class="race-section">
+            <div class="section-label"><span>01</span> Выберите народ</div>
+            <div id="race-cards" class="race-cards">
+              <button class="race-card" data-race="human" type="button">
+                <span class="race-card-shine"></span>
+                <span class="race-emblem" data-emblem="human"></span>
+                <span class="race-name">Альянс</span>
+                <span class="race-tag">Люди</span>
+                <span class="race-desc">Дисциплина и сталь</span>
+                <span class="race-bonus">Жрецы лечат войско</span>
+              </button>
+              <button class="race-card" data-race="orc" type="button">
+                <span class="race-card-shine"></span>
+                <span class="race-emblem" data-emblem="orc"></span>
+                <span class="race-name">Орда</span>
+                <span class="race-tag">Орки</span>
+                <span class="race-desc">Ярость и кровь</span>
+                <span class="race-bonus">Таурены ломают строй</span>
+              </button>
+              <button class="race-card" data-race="undead" type="button">
+                <span class="race-card-shine"></span>
+                <span class="race-emblem" data-emblem="undead"></span>
+                <span class="race-name">Плеть</span>
+                <span class="race-tag">Нежить</span>
+                <span class="race-desc">Смерть и голод</span>
+                <span class="race-bonus">Абоминации неудержимы</span>
+              </button>
+            </div>
+            <div id="race-detail" class="race-detail"></div>
+          </div>
+
+          <div class="menu-controls">
+            <div class="difficulty-block">
+              <div class="section-label small"><span>02</span> Сложность</div>
+              <div id="difficulty" class="segmented">
+                <button data-difficulty="easy" type="button">Опытный</button>
+                <button data-difficulty="normal" type="button" class="active">Ветеран</button>
+                <button data-difficulty="hard" type="button">Полководец</button>
+              </div>
+            </div>
+            <button id="start-btn" class="start-btn" type="button">
+              <span class="start-glow"></span>
+              <span class="start-label">В БОЙ</span>
+              <span class="start-sub">Начать сражение</span>
+            </button>
+          </div>
+
+          <div class="menu-footer">
+            <span><b>ЛКМ</b> — выбор</span>
+            <span><b>ПКМ</b> — приказ</span>
+            <span><b>WASD</b> — камера</span>
+            <span><b>F1</b> — помощь</span>
+          </div>
+        </div>
+        <div class="menu-right">
+          <div class="live-tag"><span></span> ЖИВАЯ СЦЕНА</div>
+          <div class="menu-right-copy">Три народа.<br />Одна корона.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HUD -------------------------------------------------------------->
+    <section id="hud" class="hud hidden">
+      <header class="topbar">
+        <div class="player-id">
+          <div id="player-crest" class="player-crest"></div>
+          <div class="player-id-text">
+            <div id="player-race" class="player-race">Альянс</div>
+            <div class="player-side">ВАША АРМИЯ</div>
+          </div>
+        </div>
+        <div class="resource-bar">
+          <div class="resource"><span class="res-icon gold" data-icon="gold"></span><span id="res-gold">520</span></div>
+          <div class="resource"><span class="res-icon lumber" data-icon="lumber"></span><span id="res-lumber">260</span></div>
+          <div class="resource supply"><span class="res-icon" data-icon="supply"></span><span id="res-supply">8 / 10</span></div>
+          <div class="resource time"><span class="clock-dot"></span><span id="game-clock">0:00</span></div>
+        </div>
+        <div class="top-actions">
+          <button id="btn-help" class="icon-btn" type="button" title="Управление (F1)"></button>
+          <button id="btn-sound" class="icon-btn" type="button" title="Звук"></button>
+          <button id="btn-pause" class="icon-btn" type="button" title="Пауза (P)"></button>
+        </div>
+      </header>
+
+      <aside id="objective" class="objective">
+        <div class="objective-head"><span>ЦЕЛЬ</span><span class="objective-pulse"></span></div>
+        <div class="objective-body">
+          <div id="objective-crest" class="objective-crest"></div>
+          <div>
+            <div id="objective-title" class="objective-title">Уничтожьте цитадель</div>
+            <div id="objective-name" class="objective-name">Некрополь</div>
+          </div>
+        </div>
+      </aside>
+
+      <div id="toasts" class="toasts"></div>
+      <div id="float-layer" class="float-layer"></div>
+
+      <div class="bottom-hud">
+        <div class="portrait-block">
+          <div id="portrait-holder" class="portrait-holder">
+            <div id="portrait-fallback" class="portrait-fallback"></div>
+            <div class="portrait-frame-glow"></div>
+          </div>
+          <div id="portrait-count" class="portrait-count"></div>
+          <div class="portrait-meta">
+            <div id="portrait-name" class="portrait-name">Нет отряда</div>
+            <div id="portrait-sub" class="portrait-sub">Выберите войска</div>
+            <div class="hp-track"><span id="portrait-hp"></span></div>
+            <div id="portrait-hp-text" class="portrait-hp-text">—</div>
+          </div>
+        </div>
+
+        <div class="info-block">
+          <div id="info-name" class="info-name">Долина Трёх Ветров</div>
+          <div id="info-sub" class="info-sub">Выберите отряд или здание</div>
+          <div id="info-desc" class="info-desc">ЛКМ — выбрать, ПКМ — отдать приказ. Постройте фермы, чтобы увеличить предел снабжения.</div>
+          <div id="stat-grid" class="stat-grid"></div>
+        </div>
+
+        <div class="command-block">
+          <div class="command-head">
+            <span id="command-title">ПРИКАЗЫ</span>
+            <span id="command-hint">выберите отряд</span>
+          </div>
+          <div id="command-grid" class="command-grid"></div>
+          <div id="queue-row" class="queue-row"></div>
+        </div>
+
+        <div class="minimap-block">
+          <div class="minimap-head"><span>ДОЛИНА ТРЁХ ВЕТРОВ</span><span id="map-clock">0:00</span></div>
+          <canvas id="minimap" width="240" height="240"></canvas>
+          <div class="minimap-hint">Клик — переместить камеру</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pause / help / end ---------------------------------------------->
+    <div id="pause-screen" class="modal hidden">
+      <div class="modal-panel">
+        <div class="modal-kicker">СРАЖЕНИЕ ПРИОСТАНОВЛЕНО</div>
+        <h2>Пауза</h2>
+        <p>Долина ждёт. Отдайте приказы или вернитесь в меню.</p>
+        <div class="modal-actions">
+          <button id="resume-btn" class="primary" type="button">Продолжить</button>
+          <button id="pause-help-btn" type="button">Управление</button>
+          <button id="pause-menu-btn" type="button">В главное меню</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="help-screen" class="modal hidden">
+      <div class="modal-panel help-panel">
+        <button id="help-close" class="modal-close" type="button">×</button>
+        <div class="modal-kicker">СВИТОК КОМАНДИРА</div>
+        <h2>Управление</h2>
+        <div class="help-grid">
+          <div><b>ЛКМ</b><span>Выбор отряда. Протяните рамку, чтобы выбрать нескольких.</span></div>
+          <div><b>ПКМ</b><span>Движение, атака, добыча, точка сбора.</span></div>
+          <div><b>WASD / стрелки</b><span>Перемещение камеры. Колесо — приближение.</span></div>
+          <div><b>Q / E</b><span>Поворот камеры.</span></div>
+          <div><b>X</b><span>Атака по площади: укажите точку.</span></div>
+          <div><b>Z</b><span>Остановить отряд.</span></div>
+          <div><b>Tab</b><span>Выбрать всех свободных рабочих.</span></div>
+          <div><b>Ctrl + A</b><span>Выбрать всю армию.</span></div>
+          <div><b>Ctrl + 1…9</b><span>Назначить группу. 1…9 — вызвать.</span></div>
+          <div><b>Пробел</b><span>Вернуть камеру к своей базе.</span></div>
+          <div><b>P / Esc</b><span>Пауза и отмена приказа.</span></div>
+          <div><b>F1</b><span>Этот свиток.</span></div>
+        </div>
+        <div class="help-tip">Совет: рабочие добывают золото и древесину. Фермы повышают снабжение. Источник в центре карты лечит раненых.</div>
+        <div class="help-touch">
+          <b>На телефоне:</b> касание — выбор или приказ, перетаскивание — камера, два пальца — масштаб. Кнопки приказов работают так же.
+        </div>
+      </div>
+    </div>
+
+    <div id="end-screen" class="modal end-screen hidden">
+      <div class="end-panel">
+        <div id="end-crest" class="end-crest"></div>
+        <div id="end-kicker" class="end-kicker">ПОБЕДА</div>
+        <h2 id="end-title">Трон ваш</h2>
+        <p id="end-sub" class="end-sub">Цитадель врага пала. Долина признала нового владыку.</p>
+        <div id="end-stats" class="end-stats"></div>
+        <div class="modal-actions">
+          <button id="rematch-btn" class="primary" type="button">Реванш</button>
+          <button id="end-menu-btn" type="button">В главное меню</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="loading-screen" class="loading hidden">
+      <div id="loading-crest" class="loading-crest"></div>
+      <div class="loading-title">Собираем армию…</div>
+      <div class="loading-bar"><span></span></div>
+    </div>
+  </main>
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>
