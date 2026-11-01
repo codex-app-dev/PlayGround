@@ -105,6 +105,7 @@ export class UI {
   }
 
   showMenu() {
+    document.body.classList.remove('in-match');
     this.menu.classList.remove('hidden', 'leaving');
     this.root.classList.add('hidden');
     this.result.classList.add('hidden');
@@ -112,6 +113,7 @@ export class UI {
   }
 
   startGame() {
+    document.body.classList.add('in-match');
     this.menu.classList.add('leaving');
     setTimeout(() => this.menu.classList.add('hidden'), 550);
     this.root.classList.remove('hidden');
@@ -283,7 +285,8 @@ export class UI {
     this.crosshair.classList.toggle('aiming', player.aiming);
     this.crosshair.style.opacity = player.buildMode || player.mode === 'drop' || player.dead ? '0' : '1';
 
-    this.aliveCount.textContent = (player.dead ? 0 : 1) + game.botManager.aliveCount;
+    const remaining = game.botManager.spawned ? game.botManager.aliveCount : game.botManager.rosterSize;
+    this.aliveCount.textContent = (player.dead ? 0 : 1) + remaining;
     this.zoneClock.textContent = zone.active ? this.formatTime(zone.timeLeft()) : '--:--';
     if (zone.state === 'shrink') {
       this.zoneLabel.textContent = 'CLOSING';
@@ -325,7 +328,9 @@ export class UI {
     }
 
     this.controlHint.classList.toggle('fade', game.elapsed > 13);
-    if (this.zoneOutside) {
+    if (player.dropShield > 0) {
+      this.healthState.textContent = `PROTECTED ${Math.ceil(player.dropShield)}S`;
+    } else if (this.zoneOutside) {
       this.healthState.textContent = 'IN THE BLUE';
     }
   }

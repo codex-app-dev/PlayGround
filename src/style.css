@@ -628,6 +628,12 @@ body.touch .weapon-hint, body.touch .control-hint { display: none; }
 .tbtn-heal { right: 134px; bottom: 72px; width: 52px; height: 52px; font-size: 6px; }
 .tbtn-swap { right: 170px; bottom: 4px; width: 48px; height: 48px; font-size: 6px; }
 .tbtn-small { color: rgba(241, 234, 217, 0.8); }
+.tbtn-pause {
+  display: none; left: calc(14px + var(--safe-l)); top: calc(56px + var(--safe-t));
+  width: 42px; height: 38px; border-radius: 9px; font-size: 10px; letter-spacing: 0.06em;
+  background: rgba(8, 12, 10, 0.44); border-color: rgba(241, 234, 217, 0.24);
+}
+body.touch .tbtn-pause { display: grid; }
 
 /* ---------------- pause / result / map ---------------- */
 
@@ -772,9 +778,12 @@ body.touch .weapon-hint, body.touch .control-hint { display: none; }
   .minimap-meta .coord { display: none; }
   .killfeed { top: calc(58px + 141px + var(--safe-t)); width: 175px; }
   .kill-entry { font-size: 6px; padding: 4px 6px; }
-  .phase-banner { top: calc(58px + var(--safe-t)); width: 180px; }
+  .phase-banner {
+    top: calc(102px + var(--safe-t)); left: calc(14px + var(--safe-l)); transform: none;
+    width: min(210px, calc(100vw - 168px)); align-items: flex-start; text-align: left;
+  }
   .phase-banner strong { font-size: 12px; }
-  .phase-banner span { font-size: 6px; }
+  .phase-banner span { font-size: 6px; letter-spacing: 0.18em; }
   .drop-readout { top: 28%; min-width: 210px; padding: 9px 14px; }
   .drop-readout strong { font-size: 26px; }
   .drop-readout p { font-size: 6px; }
@@ -817,7 +826,25 @@ body.touch .weapon-hint, body.touch .control-hint { display: none; }
 
 @media (orientation: portrait) and (pointer: coarse) and (max-width: 700px) {
   .rotate-hint { display: flex; align-items: center; }
+  body.in-match .rotate-hint { display: none; }
 }
+
+/* Keep the HUD clear of the touch controls on tablets and phones. */
+@media (pointer: coarse) and (orientation: portrait) {
+  .vitals-panel, .weapon-panel, .build-bar { bottom: calc(190px + var(--safe-b)); }
+}
+
+@media (pointer: coarse) and (orientation: landscape) {
+  .minimap-wrap { width: clamp(122px, 14vw, 150px); top: calc(56px + var(--safe-t)); right: calc(14px + var(--safe-r)); }
+  .killfeed { top: calc(56px + var(--safe-t)); right: calc(250px + var(--safe-r)); width: 200px; }
+  .vitals-panel { left: calc(14px + var(--safe-l)); bottom: calc(142px + var(--safe-b)); width: 220px; }
+  .weapon-panel { right: calc(246px + var(--safe-r)); bottom: calc(130px + var(--safe-b)); width: 196px; }
+  .build-bar { width: min(300px, calc(100vw - 320px)); bottom: calc(18px + var(--safe-b)); }
+  body.touch.building .weapon-panel { opacity: 0; pointer-events: none; }
+}
+
+body.touch .pause-controls,
+body.touch #map-screen .map-foot > span:first-child { display: none; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.001s !important; animation-iteration-count: 1 !important; transition-duration: 0.001s !important; }

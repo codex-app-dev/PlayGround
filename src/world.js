@@ -576,6 +576,19 @@ export class World {
     return null;
   }
 
+  // Camera boom: ignore cover low enough to see over instead of snapping in.
+  raycastCamera(origin, dir, maxDist, minTop) {
+    let best = null;
+    for (const box of this.colliders) {
+      if (box.maxY <= minTop) continue;
+      const t = rayAabb(origin, dir, box, maxDist);
+      if (t !== null && t >= 0 && t < maxDist && (!best || t < best.distance)) {
+        best = { distance: t, box };
+      }
+    }
+    return best;
+  }
+
   raycast(origin, dir, maxDist = 300) {
     const staticHit = this.raycastStatic(origin, dir, maxDist);
     let best = staticHit || null;

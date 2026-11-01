@@ -49,7 +49,7 @@ class Game {
     });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, this.isTouch ? 1.65 : 2));
     this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.renderer.shadowMap.type = THREE.PCFShadowMap;
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.07;
@@ -60,7 +60,7 @@ class Game {
     this.camera.position.set(185, 112, 172);
     this.camera.lookAt(0, 10, 0);
 
-    this.clock = new THREE.Clock();
+    this.lastFrame = performance.now();
     this.audio = new AudioEngine();
     this.effects = new Effects(this.scene);
 
@@ -122,7 +122,7 @@ class Game {
       this.ui.showMenu();
       this.ui.bootDone();
       if (status) status.textContent = 'ALL SYSTEMS NOMINAL';
-      this.clock.start();
+      this.lastFrame = performance.now();
       requestAnimationFrame(this.boundAnimate);
     } catch (err) {
       console.error('[LAST CIRCLE] boot failed', err);
@@ -335,6 +335,7 @@ class Game {
     this.bindTap('touch-heal', () => this.player?.startHeal(this));
     this.bindTap('touch-reload', () => this.player?.onReload(this));
     this.bindTap('touch-swap', () => this.cycleWeapon());
+    this.bindTap('touch-pause', () => this.pauseGame());
 
     // One-finger drag anywhere outside the controls looks around.
     window.addEventListener('pointerdown', e => {
@@ -461,7 +462,7 @@ class Game {
     this.state = 'dropping';
     this.matchTime = 0;
     this.elapsed = 0;
-    this.clock.getDelta();
+    this.lastFrame = performance.now();
     this.ui.toast('DEPLOYMENT', 'STEER THE DESCENT', 'gold');
     this.requestPointerLock();
   }
@@ -518,7 +519,7 @@ class Game {
     this.matchTime = 0;
     this.killedBy = null;
     this.pendingResult = false;
-    this.ui.toast('BOOTS ON GROUND', `${this.botManager.aliveCount + 1} OPERATORS REMAIN`, 'gold');
+    this.ui.toast('BOOTS ON GROUND', `${this.botManager.aliveCount + 1} OPERATORS · 4S DROP SHIELD`, 'gold');
     this.ui.zonePhase('THE CIRCLE IS CLOSING', 'PHASE 01 · 155M RADIUS');
     this.audio.zonePhase();
     this.requestPointerLock();
@@ -561,7 +562,7 @@ class Game {
 
   onMapClosed() {
     if (this.state === 'playing' || this.state === 'dropping') {
-      this.clock.getDelta();
+      this.lastFrame = performance.now();
       this.requestPointerLock();
     }
   }
@@ -583,7 +584,7 @@ class Game {
     this.ui.hidePause();
     this.ui.closeMap();
     this.state = this.stateBeforePause || 'playing';
-    this.clock.getDelta();
+    this.lastFrame = performance.now();
     this.requestPointerLock();
   }
 
@@ -606,7 +607,7 @@ class Game {
       Math.sin(this.menuAngle) * this.menuOrbit,
     );
     this.camera.lookAt(0, 12, 0);
-    this.clock.getDelta();
+    this.lastFrame = performance.now();
   }
 
   hitscan(origin, dir, range, shooter) {
@@ -754,7 +755,9 @@ class Game {
     requestAnimationFrame(this.boundAnimate);
     if (!this.world) return;
 
-    const dt = Math.min(this.clock.getDelta(), 0.05);
+    const now = performance.now();
+    const dt = Math.min((now - this.lastFrame) / 1000, 0.05);
+    this.lastFrame = now;
     this.elapsed += dt;
 
     if (this.state === 'menu' || this.state === 'boot') {

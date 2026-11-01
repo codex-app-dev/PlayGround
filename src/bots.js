@@ -187,7 +187,7 @@ export class Bot {
   selectTarget() {
     const game = this.game;
     const candidates = [];
-    if (game.player && !game.player.dead && game.player.mode === 'playing') {
+    if (game.player && !game.player.dead && game.player.mode === 'playing' && game.player.dropShield <= 0) {
       const d = this.pos.distanceTo(game.player.pos);
       if (d < 76) candidates.push({ ent: game.player, kind: 'player', dist: d });
     }
@@ -501,6 +501,10 @@ export class BotManager {
     let n = 0;
     for (const bot of this.bots) if (bot.alive) n++;
     return n;
+  }
+
+  get rosterSize() {
+    return BOT_COUNT;
   }
 
   isFree(x, z, others) {

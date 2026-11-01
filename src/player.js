@@ -60,6 +60,7 @@ export class Player {
     this.dropAlt = 0;
     this.shake = 0;
     this.cameraKick = 0;
+    this.dropShield = 0;
     this.lastDamageTime = -10;
     this.buildMode = false;
     this.buildType = 'wall';
@@ -200,8 +201,10 @@ export class Player {
     this.reloadTimer = 0;
     this.fireCooldown = 0;
     this.healTimer = 0;
+    this.dropShield = 0;
     this.buildMode = false;
     this.group.visible = true;
+    this.model.visible = true;
     this.model.rotation.set(0, 0, 0);
     this.model.position.set(0, 0, 0);
     this.chuteOpen = false;
@@ -214,7 +217,7 @@ export class Player {
   startDrop(x, z) {
     this.pos.set(x, 188, z);
     this.vel.set(0, -8, 0);
-    this.yaw = 0.9;
+    this.yaw = Math.atan2(x, z);
     this.pitch = -0.32;
     this.mode = 'drop';
     this.grounded = false;
@@ -324,6 +327,7 @@ export class Player {
     this.fireCooldown = Math.max(0, this.fireCooldown - dt);
     this.shotSpread = Math.max(0, this.shotSpread - dt * 0.11);
     this.shake = Math.max(0, this.shake - dt * 5);
+    this.dropShield = Math.max(0, this.dropShield - dt);
     this.clampPitch();
 
     if (this.mode === 'drop') {
@@ -391,6 +395,7 @@ export class Player {
       this.pos.set(x, Math.max(this.world.terrainHeight(x, z), 0.5), z);
       this.vel.set(0, 0, 0);
       this.mode = 'playing';
+      this.dropShield = 4;
       this.grounded = true;
       this.chuteOpen = false;
       this.parachute.visible = false;
@@ -693,6 +698,7 @@ export class Player {
 
   damage(amount, attacker, game, ignoreArmor = false) {
     if (this.dead || this.mode !== 'playing') return;
+    if (this.dropShield > 0) return;
     let dmg = amount;
     if (!ignoreArmor && this.armor > 0) {
       const absorbed = Math.min(this.armor, amount * 0.55);
@@ -780,10 +786,10 @@ export class Player {
     const distToCam = toCam.length();
     if (distToCam > 0.2) {
       const dir = toCam.clone().normalize();
-      const hit = this.world.raycastStatic(pivot, dir, distToCam);
+      const hit = this.world.raycastCamera(pivot, dir, distToCam, pivot.y + 0.12);
       if (hit && hit.distance < distToCam) {
-        desired.copy(pivot).addScaledVector(dir, Math.max(0.55, hit.distance - 0.22));
-        desired.y += 0.12;
+        desired.copy(pivot).addScaledVector(dir, Math.max(0.9, hit.distance - 0.24));
+        desired.y += 0.18;
       }
     }
     const terrainAtCam = this.world.terrainHeight(desired.x, desired.z) + 0.42;
@@ -804,6 +810,10 @@ export class Player {
     const lookAt = pivot.clone().addScaledVector(forward, 12).addScaledVector(right, aimZoom ? 0.48 : 0.58);
     if (drop) lookAt.copy(pivot).addScaledVector(forward, 18);
     camera.lookAt(lookAt);
+
+    // When cover forces the camera in close, hide the body so it never fills the screen.
+    const camDistance = camera.position.distanceTo(pivot);
+    this.model.visible = drop || camDistance > 2.35 || this.dead;
 
     const targetFov = drop ? 72 : aimZoom ? (this.active?.id === 'sniper' ? 38 : 48) : this.input.sprint ? 70 : 66;
     camera.fov = damp(camera.fov, targetFov, 8, dt);
