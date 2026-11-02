@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#070b17">
+<title>BIONEURAL: Synapse Run</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+:root{color-scheme:dark;--cyan:#62f5ee;--pink:#ff4fb7;--ink:#070b17}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--ink);font-family:'Space Grotesk',sans-serif;color:#eef8ff;touch-action:none}body{display:grid;place-items:center;background:radial-gradient(ellipse at 50% 35%,#14203a 0,#080c18 52%,#050711 100%)}
+#game-shell{position:relative;width:min(100vw,1440px);height:min(100vh,900px);min-height:320px;overflow:hidden;background:#070b17;box-shadow:0 28px 100px #000b;border:1px solid #ffffff0f}
+canvas{position:absolute;width:100%;height:100%;inset:0;display:block}
+.hud{position:absolute;inset:0 0 auto;z-index:2;padding:clamp(12px,2.4vw,27px) clamp(14px,3vw,38px);display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none;background:linear-gradient(#070b17c9,transparent)}
+.brand{display:flex;align-items:center;gap:12px}.brand-mark{width:37px;height:37px;border:1px solid #62f5ee75;border-radius:12px;display:grid;place-items:center;box-shadow:inset 0 0 18px #62f5ee17;color:var(--cyan);font-size:21px}.brand strong{display:block;font-size:13px;letter-spacing:.21em}.brand small{display:block;margin-top:3px;color:#7f91ad;font:9px 'DM Mono',monospace;letter-spacing:.13em}
+.readouts{display:flex;align-items:center;gap:clamp(12px,3vw,35px);font:10px 'DM Mono',monospace;color:#91a4c0;letter-spacing:.08em;text-transform:uppercase}.readout b{display:block;color:#f0fbff;font:600 16px 'Space Grotesk',sans-serif;letter-spacing:0;margin-top:3px}.signal{display:flex;align-items:center;gap:6px;color:var(--cyan)}.signal i{width:6px;height:6px;background:var(--cyan);border-radius:50%;box-shadow:0 0 9px var(--cyan)}
+#phase-pill{position:absolute;top:88px;left:50%;transform:translateX(-50%);z-index:2;padding:8px 13px;border:1px solid #63f4ed54;border-radius:20px;background:#08121bd9;color:var(--cyan);font:10px 'DM Mono',monospace;letter-spacing:.13em;pointer-events:none;transition:all .2s}#phase-pill.echo{border-color:#ff4fb777;color:#ff72c3;box-shadow:0 0 22px #ff4fb71e}
+#overlay{position:absolute;inset:0;z-index:4;display:grid;place-items:center;background:linear-gradient(100deg,#050914e8,#091020d1 54%,#08101bd9);transition:opacity .28s}#overlay.hidden{opacity:0;pointer-events:none}.panel{width:min(590px,90%);padding:clamp(25px,5vw,53px);border:1px solid #8eabc22d;border-radius:8px;background:linear-gradient(145deg,#101a2bea,#0a1020f2);box-shadow:0 20px 70px #0008;position:relative}.panel:before{content:'';position:absolute;left:0;top:0;width:42px;height:2px;background:var(--cyan);box-shadow:0 0 16px var(--cyan)}.eyebrow{font:10px 'DM Mono',monospace;color:var(--cyan);letter-spacing:.22em;text-transform:uppercase}.panel h1{font-size:clamp(36px,7vw,65px);line-height:.98;letter-spacing:-.06em;margin:19px 0 13px}.panel h1 span{color:var(--cyan)}.panel p{color:#a7b6cc;line-height:1.6;font-size:14px;max-width:460px;margin:0 0 21px}.mission{padding:14px 16px;margin:20px 0;border-left:2px solid var(--pink);background:#ff4fb70a;color:#c1cada;font-size:12px;line-height:1.6}.mission b{color:#ff81c9;font:10px 'DM Mono',monospace;letter-spacing:.13em;display:block;margin-bottom:4px}.controls{display:flex;gap:8px;flex-wrap:wrap;margin:19px 0 23px}.key{border:1px solid #8194ae45;border-radius:4px;padding:7px 10px;color:#d7e4f3;font:10px 'DM Mono',monospace;background:#ffffff06}.key em{color:#7488a3;font-style:normal;margin-left:5px}.action{border:0;border-radius:4px;padding:14px 19px;background:var(--cyan);color:#061015;font:700 11px 'DM Mono',monospace;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;box-shadow:0 0 25px #62f5ee3d}.action:hover{filter:brightness(1.12);transform:translateY(-1px)}.foot{font:9px 'DM Mono',monospace;color:#697c97;margin-top:17px;letter-spacing:.1em}
+#toast{position:absolute;z-index:3;top:24%;left:50%;transform:translate(-50%,-12px);padding:10px 16px;border:1px solid #62f5ee5a;border-radius:3px;background:#09131bea;color:#c8fff8;font:10px 'DM Mono',monospace;letter-spacing:.12em;opacity:0;transition:.3s;pointer-events:none;white-space:nowrap}#toast.show{opacity:1;transform:translate(-50%,0)}
+#mobile{display:none;position:absolute;z-index:3;bottom:max(15px,env(safe-area-inset-bottom));left:0;right:0;padding:0 18px;justify-content:space-between;align-items:end;pointer-events:none}.pad,.mobile-actions{display:flex;gap:9px;pointer-events:auto}.touch-btn{width:53px;height:53px;border:1px solid #92b3c05c;border-radius:15px;background:#07111bc9;color:#b9fdf5;font:20px 'DM Mono',monospace;display:grid;place-items:center;user-select:none;-webkit-user-select:none;touch-action:none;box-shadow:0 5px 17px #0005}.touch-btn:active,.touch-btn.down{background:#62f5ee38;border-color:var(--cyan)}.touch-btn.phase{width:66px;color:#ff72c3;border-color:#ff4fb767;font-size:10px;letter-spacing:.08em}.touch-btn.jump{color:var(--cyan)}
+@media (pointer:coarse),(max-width:700px){#mobile{display:flex}.hud{padding-top:max(12px,env(safe-area-inset-top))}.readouts{gap:12px}.readout{font-size:8px}.readout b{font-size:13px}.brand-mark{width:31px;height:31px}.brand strong{font-size:11px}.brand small{font-size:8px}#phase-pill{top:68px}.panel{padding:25px}.panel h1{font-size:42px}.panel p{font-size:12px}.controls{display:none}}
+@media(max-height:500px){.hud{padding-top:10px}.panel{padding:20px}.panel h1{font-size:36px;margin:10px 0}.panel p{margin-bottom:10px}.mission{margin:10px 0;padding:9px}.controls{margin:10px 0}.foot{margin-top:8px}}
+</style>
+</head>
+<body>
+<main id="game-shell" aria-label="BIONEURAL: Synapse Run game">
+<canvas id="game"></canvas>
+<header class="hud">
+  <div class="brand"><div class="brand-mark">⌁</div><div><strong>BIONEURAL</strong><small>NEURAL FRONTIER // 07</small></div></div>
+  <div class="readouts"><div class="readout">MEMORY SHARDS<b id="shard-count">00 / 03</b></div><div class="readout">SYNC<b id="sync-count">100%</b></div><div class="signal"><i></i> LIVE</div></div>
+</header>
+<div id="phase-pill">● &nbsp; MATERIAL PLANE</div><div id="toast">MEMORY FRAGMENT RECOVERED</div>
+<div id="mobile"><div class="pad"><button class="touch-btn" data-key="left" aria-label="Move left">←</button><button class="touch-btn" data-key="right" aria-label="Move right">→</button></div><div class="mobile-actions"><button class="touch-btn phase" data-key="phase">PHASE</button><button class="touch-btn jump" data-key="jump" aria-label="Jump">↑</button></div></div>
+<div id="overlay"><section class="panel" id="panel">
+  <div class="eyebrow">A BIONEURAL FIELD EXPERIMENT</div><h1>THE<br><span>SYNAPSE</span><br>RUN</h1>
+  <p>Your signal has fractured inside the Synapse Foundry. Recover three memory shards and reach the uplink before the neural storm consumes the path.</p>
+  <div class="mission"><b>NEW PROTOCOL // PHASE SHIFT</b>Tap <strong>Q</strong> to jump between Material and Echo planes. Each plane has its own bridges. Shift midair to find a route through the foundry.</div>
+  <div class="controls"><div class="key">A / D <em>MOVE</em></div><div class="key">SPACE <em>JUMP</em></div><div class="key">Q <em>PHASE SHIFT</em></div><div class="key">R <em>RESTART</em></div></div>
+  <button class="action" id="start">INITIALIZE RUN &nbsp; →</button><div class="foot">FIELD NOTE 07.3 &nbsp;·&nbsp; PRESS R TO REBOOT AT ANY TIME</div>
+</section></div>
+</main>
+<script>
+(()=>{
+const canvas=document.querySelector('#game'),ctx=canvas.getContext('2d'),shell=document.querySelector('#game-shell');
+const overlay=document.querySelector('#overlay'),panel=document.querySelector('#panel'),shardUI=document.querySelector('#shard-count'),syncUI=document.querySelector('#sync-count'),phasePill=document.querySelector('#phase-pill'),toast=document.querySelector('#toast');
+let W=1200,H=700,dpr=1,scale=1,cam=0,last=0,elapsed=0,toastTimer=0;
+const keys={left:false,right:false,jump:false};let gameState='title',phase=0,shards=0,deaths=0,checkpoint=80,player;
+const worldW=2900,groundY=570;
+const platforms=[
+ {x:0,y:570,w:440,h:100,p:2},{x:505,y:570,w:285,h:100,p:2},{x:842,y:570,w:230,h:100,p:2},{x:1110,y:570,w:315,h:100,p:2},{x:1467,y:570,w:230,h:100,p:2},{x:1738,y:570,w:302,h:100,p:2},{x:2080,y:570,w:250,h:100,p:2},{x:2370,y:570,w:530,h:100,p:2}, 
+ {x:350,y:492,w:125,h:18,p:1},{x:565,y:465,w:122,h:18,p:1},{x:735,y:505,w:100,h:18,p:0},{x:920,y:470,w:135,h:18,p:1},{x:1150,y:495,w:125,h:18,p:0},{x:1325,y:454,w:130,h:18,p:1},{x:1530,y:485,w:130,h:18,p:1},{x:1770,y:470,w:125,h:18,p:0},{x:1930,y:420,w:130,h:18,p:1},{x:2140,y:488,w:130,h:18,p:1},{x:2310,y:450,w:145,h:18,p:0},{x:2550,y:490,w:115,h:18,p:1},{x:2680,y:430,w:130,h:18,p:1}
+];
+const hazards=[{x:430,w:75},{x:790,w:52},{x:1072,w:38},{x:1425,w:42},{x:1697,w:41},{x:2040,w:40},{x:2330,w:40}];
+const fragmentDefs=[{x:617,y:426},{x:1379,y:414},{x:2195,y:448}];let fragments=[],checkpointFlags=[false,false],exit={x:2780,y:470};
+function resize(){const r=shell.getBoundingClientRect();dpr=Math.min(devicePixelRatio||1,2);W=r.width;H=r.height;canvas.width=Math.round(W*dpr);canvas.height=Math.round(H*dpr);scale=Math.min(W/1200,H/700);ctx.setTransform(dpr*scale,0,0,dpr*scale,dpr*(W-1200*scale)/2,dpr*(H-700*scale)/2);}
+new ResizeObserver(resize).observe(shell);resize();
+function reset(){phase=0;shards=0;deaths=0;checkpoint=80;cam=0;elapsed=0;fragments=fragmentDefs.map(f=>({...f,taken:false}));player={x:70,y:groundY-42,w:28,h:42,vx:0,vy:0,ground:false,invuln:0};checkpointFlags=[false,false];updateUI();}
+reset();
+function updateUI(){shardUI.textContent=`0${shards} / 03`;syncUI.textContent=`${Math.max(0,100-deaths*12)}%`;phasePill.innerHTML=phase===0?'● &nbsp; MATERIAL PLANE':'◉ &nbsp; ECHO PLANE';phasePill.classList.toggle('echo',phase===1)}
+function notify(text){toast.textContent=text;toast.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>toast.classList.remove('show'),1700)}
+function startGame(){reset();gameState='playing';overlay.classList.add('hidden')}
+document.querySelector('#start').addEventListener('click',startGame);
+function finish(win){gameState=win?'won':'dead';overlay.classList.remove('hidden');if(win){panel.innerHTML=`<div class="eyebrow">SIGNAL RESTORED // RUN COMPLETE</div><h1>MEMORY<br><span>REPAIRED.</span></h1><p>You recovered all three shards and outran the neural storm. The Foundry is quiet—for now.</p><div class="mission"><b>FIELD REPORT</b>Shards recovered: <strong>03 / 03</strong><br>Resets: <strong>${deaths}</strong><br>Sync integrity: <strong>${Math.max(0,100-deaths*12)}%</strong></div><button class="action" id="again">RUN IT AGAIN &nbsp; →</button>`}else{panel.innerHTML=`<div class="eyebrow">SIGNAL LOST // RUN ENDED</div><h1>NEURAL<br><span>COLLAPSE.</span></h1><p>The storm caught your signal. Reboot the run and use phase shift to find a safer route across the Foundry.</p><div class="mission"><b>FRAGMENTS SECURED</b>${String(shards).padStart(2,'0')} / 03 memory shards</div><button class="action" id="again">REBOOT RUN &nbsp; →</button>`}document.querySelector('#again').addEventListener('click',startGame)}
+function keyDown(e){let k=e.key.toLowerCase();if([' ','arrowleft','arrowright','arrowup'].includes(k))e.preventDefault();if(k==='a'||k==='arrowleft')keys.left=true;if(k==='d'||k==='arrowright')keys.right=true;if(k===' '||k==='w'||k==='arrowup')keys.jump=true;if((k==='q'||k==='e')&&!e.repeat&&gameState==='playing'){phase=1-phase;updateUI();notify(phase?'ECHO PLANE // SIGNAL OUT OF PHASE':'MATERIAL PLANE // SIGNAL LOCKED')}if(k==='r'){if(gameState==='title'||gameState==='dead'||gameState==='won')startGame();else reset()} }
+function keyUp(e){let k=e.key.toLowerCase();if(k==='a'||k==='arrowleft')keys.left=false;if(k==='d'||k==='arrowright')keys.right=false;if(k===' '||k==='w'||k==='arrowup')keys.jump=false}
+window.addEventListener('keydown',keyDown);window.addEventListener('keyup',keyUp);window.addEventListener('blur',()=>{keys.left=keys.right=keys.jump=false});
+document.querySelectorAll('.touch-btn').forEach(btn=>{const key=btn.dataset.key;const on=e=>{e.preventDefault();btn.classList.add('down');if(key==='phase'){if(gameState==='playing'){phase=1-phase;updateUI();notify(phase?'ECHO PLANE // SIGNAL OUT OF PHASE':'MATERIAL PLANE // SIGNAL LOCKED')}}else keys[key]=true};const off=e=>{e.preventDefault();btn.classList.remove('down');if(key!=='phase')keys[key]=false};btn.addEventListener('pointerdown',on);btn.addEventListener('pointerup',off);btn.addEventListener('pointercancel',off);btn.addEventListener('pointerleave',off)});
+function hit(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y}
+function respawn(){deaths++;player.x=checkpoint;player.y=groundY-42;player.vx=player.vy=0;player.invuln=1.1;phase=0;updateUI();if(deaths>=4){finish(false);return}notify('SIGNAL REBOUND // CHECKPOINT RESTORED')}
+function update(dt){if(gameState!=='playing')return;elapsed+=dt;const p=player;p.invuln=Math.max(0,p.invuln-dt);let dir=(keys.right?1:0)-(keys.left?1:0);p.vx+=(dir*1800-p.vx*(dir?0:8))*dt;p.vx=Math.max(-260,Math.min(260,p.vx));if(keys.jump&&p.ground){p.vy=-620;p.ground=false}p.vy+=1500*dt;p.vy=Math.min(p.vy,850);
+const oldY=p.y;p.x+=p.vx*dt;p.x=Math.max(0,Math.min(worldW-p.w,p.x));p.y+=p.vy*dt;p.ground=false;
+for(const plat of platforms){if(plat.p!==phase&&plat.p!==2)continue;if(p.x+p.w>plat.x&&p.x<plat.x+plat.w&&oldY+p.h<=plat.y+3&&p.y+p.h>=plat.y&&p.vy>=0){p.y=plat.y-p.h;p.vy=0;p.ground=true}}
+if(p.y>H/scale+100)respawn();if(p.invuln<=0)for(const h of hazards){if(hit(p,{x:h.x,y:groundY-20,w:h.w,h:20})){respawn();break}}
+for(const f of fragments){if(!f.taken&&hit(p,{x:f.x-13,y:f.y-13,w:26,h:26})){f.taken=true;shards++;updateUI();notify(`MEMORY SHARD ${String(shards).padStart(2,'0')} / 03 RECOVERED`)}}
+if(p.x>1150&&p.x<1200){checkpoint=1128;if(!checkpointFlags[0]){checkpointFlags[0]=true;notify('CHECKPOINT SYNCED // FOUNDRY MIDLINE')}}if(p.x>2045&&p.x<2100){checkpoint=2088;if(!checkpointFlags[1]){checkpointFlags[1]=true;notify('CHECKPOINT SYNCED // OUTER CIRCUIT')}}
+if(hit(p,{x:exit.x,y:exit.y,w:48,h:100})){if(shards===3)finish(true);else if(!window.exitNudge){window.exitNudge=true;notify(`UPLINK LOCKED // ${3-shards} SHARD${shards===2?'':'S'} REQUIRED`);setTimeout(()=>window.exitNudge=false,1700)}}
+const target=Math.max(0,Math.min(worldW-1200,p.x-1200*.37));cam+=(target-cam)*Math.min(1,dt*4.5);}
+function glow(color,blur){ctx.shadowColor=color;ctx.shadowBlur=blur}
+function draw(){ctx.setTransform(dpr*scale,0,0,dpr*scale,dpr*(W-1200*scale)/2,dpr*(H-700*scale)/2);ctx.clearRect(0,0,1200,700);const worldViewW=1200,worldViewH=700;const offset=cam;ctx.save();ctx.translate(-offset,0);
+// atmospheric background
+let bg=ctx.createLinearGradient(0,0,0,700);bg.addColorStop(0,'#0b1325');bg.addColorStop(.7,'#101c30');bg.addColorStop(1,'#0a1422');ctx.fillStyle=bg;ctx.fillRect(offset,0,worldViewW,worldViewH);
+// far neural silhouettes
+for(let i=0;i<20;i++){let x=i*165+((elapsed*9)%165);ctx.strokeStyle=`rgba(61,131,160,${.07+Math.sin(i*5)*.02})`;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x,0);ctx.bezierCurveTo(x-55,140,x+62,210,x,330+Math.sin(i)*90);ctx.stroke();for(let j=0;j<3;j++){let ny=85+j*80+Math.sin(i+j)*32;ctx.fillStyle='#56a3bb19';ctx.beginPath();ctx.arc(x+Math.sin(i+j*8)*38,ny,2,0,Math.PI*2);ctx.fill()}}
+// distant grid
+ctx.strokeStyle='#67b8d015';ctx.lineWidth=1;for(let x=Math.floor(offset/80)*80;x<offset+worldViewW+80;x+=80){ctx.beginPath();ctx.moveTo(x,350);ctx.lineTo(x,700);ctx.stroke()}for(let y=390;y<700;y+=35){ctx.beginPath();ctx.moveTo(offset,y);ctx.lineTo(offset+worldViewW,y);ctx.stroke()}
+// floating level title
+ctx.fillStyle='#b9ccdf';ctx.font='10px "DM Mono", monospace';ctx.letterSpacing='2px';ctx.fillText('SYNAPSE FOUNDRY  /  SECTOR 07',offset+36,112);ctx.fillStyle='#698098';ctx.fillText('ROUTE 01  —  THE SPLIT CIRCUIT',offset+36,130);
+// phase bridges and ground
+for(const pl of platforms){let active=pl.p===phase;const color=pl.p===0?'#62f5ee':'#ff4fb7';if(pl.y>=560){ctx.fillStyle='#111f31';ctx.fillRect(pl.x,pl.y,pl.w,140);ctx.fillStyle='#29465a';ctx.fillRect(pl.x,pl.y,pl.w,3);for(let xx=pl.x+12;xx<pl.x+pl.w;xx+=26){ctx.fillStyle='#8cbed014';ctx.fillRect(xx,pl.y+16,2,80)}}else{if(active){glow(color,15);ctx.fillStyle=pl.p===0?'#143b47':'#3e1836';ctx.fillRect(pl.x,pl.y,pl.w,pl.h);ctx.fillStyle=color;ctx.fillRect(pl.x,pl.y,pl.w,3);ctx.shadowBlur=0;ctx.fillStyle=pl.p===0?'#74fff0':'#ff80ca';ctx.fillRect(pl.x+7,pl.y+8,pl.w-14,1)}else{ctx.fillStyle='#20253a';ctx.fillRect(pl.x,pl.y,pl.w,pl.h);ctx.fillStyle=pl.p===0?'#62f5ee55':'#ff4fb755';ctx.fillRect(pl.x,pl.y,pl.w,2);ctx.fillStyle='#ffffff0b';ctx.fillRect(pl.x+10,pl.y+8,pl.w-20,1)}}}
+// hazard teeth
+for(const h of hazards){ctx.fillStyle='#17273a';ctx.fillRect(h.x,groundY-3,h.w,6);glow('#ff547b',12);ctx.fillStyle='#fc5676';for(let x=h.x+2;x<h.x+h.w-2;x+=12){ctx.beginPath();ctx.moveTo(x,groundY-4);ctx.lineTo(x+6,groundY-20-Math.sin(elapsed*6+x)*3);ctx.lineTo(x+11,groundY-4);ctx.fill()}ctx.shadowBlur=0}
+// checkpoints
+for(let i=0;i<2;i++){let x=i===0?1160:2090;ctx.fillStyle=checkpointFlags[i]?'#62f5ee':'#456075';ctx.fillRect(x,groundY-76,3,76);ctx.fillStyle=checkpointFlags[i]?'#62f5ee':'#526c83';ctx.beginPath();ctx.moveTo(x+3,groundY-74);ctx.lineTo(x+32,groundY-64);ctx.lineTo(x+3,groundY-54);ctx.fill();if(checkpointFlags[i]){glow('#62f5ee',13);ctx.fillRect(x-2,groundY-79,7,5);ctx.shadowBlur=0}}
+// shards
+for(const f of fragments){if(f.taken)continue;let pulse=1+Math.sin(elapsed*4+f.x)*.14;ctx.save();ctx.translate(f.x,f.y);ctx.rotate(elapsed*.8);glow('#ffe47b',19);ctx.fillStyle='#ffe47b';ctx.beginPath();ctx.moveTo(0,-12*pulse);ctx.lineTo(8*pulse,0);ctx.lineTo(0,12*pulse);ctx.lineTo(-8*pulse,0);ctx.closePath();ctx.fill();ctx.shadowBlur=0;ctx.restore();ctx.strokeStyle='#ffe47b70';ctx.beginPath();ctx.arc(f.x,f.y,18+Math.sin(elapsed*3)*3,0,Math.PI*2);ctx.stroke()}
+// exit uplink
+let unlocked=shards===3;ctx.fillStyle=unlocked?'#133e43':'#241b37';ctx.fillRect(exit.x,exit.y,48,100);ctx.strokeStyle=unlocked?'#62f5ee':'#ff4fb7';ctx.lineWidth=2;glow(unlocked?'#62f5ee':'#ff4fb7',unlocked?19:10);ctx.strokeRect(exit.x,exit.y,48,100);ctx.shadowBlur=0;ctx.fillStyle=unlocked?'#b7fff8':'#ff90d4';ctx.font='9px "DM Mono", monospace';ctx.textAlign='center';ctx.fillText(unlocked?'UPLINK':'LOCKED',exit.x+24,exit.y-9);ctx.textAlign='left';for(let y=exit.y+12;y<exit.y+88;y+=15){ctx.fillStyle=unlocked?'#62f5ee':'#ff4fb7';ctx.globalAlpha=.6+Math.sin(elapsed*4+y)*.3;ctx.fillRect(exit.x+12,y,24,2)}ctx.globalAlpha=1;
+// player silhouette with pulse
+const p=player;if(!(p.invuln>0&&Math.floor(elapsed*14)%2===0)){let pc=phase===0?'#78fff2':'#ff76c7';ctx.save();ctx.translate(p.x+p.w/2,p.y+p.h/2);glow(pc,18);ctx.fillStyle=phase===0?'#84f7ec':'#fc76c2';ctx.beginPath();ctx.arc(0,-10,11,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;ctx.fillStyle='#102236';ctx.beginPath();ctx.arc(0,-10,7,0,Math.PI*2);ctx.fill();ctx.fillStyle='#ecffff';ctx.fillRect(p.vx<0?-5:2,-12,3,2);ctx.fillStyle=pc;ctx.beginPath();ctx.moveTo(-9,-1);ctx.lineTo(9,-1);ctx.lineTo(7,15);ctx.lineTo(-7,15);ctx.closePath();ctx.fill();ctx.strokeStyle=pc;ctx.lineWidth=3;let stride=p.ground?Math.sin(elapsed*14)*3:0;ctx.beginPath();ctx.moveTo(-4,14);ctx.lineTo(-5+stride,20);ctx.moveTo(4,14);ctx.lineTo(5-stride,20);ctx.stroke();ctx.restore()}
+// particles near hero
+ctx.restore(); // world transform
+// screen-space scan lines and progress trail
+ctx.fillStyle='#ffffff08';for(let y=0;y<700;y+=4)ctx.fillRect(0,y,1200,1);
+ctx.fillStyle='#243247';ctx.fillRect(0,680,1200,2);ctx.fillStyle=phase===0?'#62f5ee':'#ff4fb7';ctx.fillRect(0,680,1200*Math.min(1,player.x/worldW),2);
+}
+function loop(t){let dt=Math.min(.033,(t-last)/1000||0);last=t;update(dt);draw();requestAnimationFrame(loop)}requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
