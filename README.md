@@ -1,18 +1,20 @@
-# PlayGround
+# Riftline: Neon Frontier
 
-<!-- omgithub:readme:start -->
-## 🚀 Build, play, and remix with OMGithub
+A browser-based voxel-inspired 3D runner set on **The Shardline**, a fractured route through the Outer Rim. Dodge sentries and barricades, collect shard cores, and survive the cyclic rift surges to reach extraction.
 
-**Created using [OMGithub.com](https://omgithub.com).**
+## Play
 
-[![OMGithub](https://img.shields.io/badge/OMGithub-Open%20project-orange?style=for-the-badge)](https://omgithub.com/codex-app-dev/PlayGround)
-[![GitHub](https://img.shields.io/badge/GitHub-Source-181717?logo=github&style=for-the-badge)](https://github.com/codex-app-dev/PlayGround)
+Open `index.html` in a browser, or serve this folder locally:
 
-- 🎮 [Open the project](https://omgithub.com/codex-app-dev/PlayGround).
-- ✨ [Remix this project](https://omgithub.com/?remix=codex-app-dev%2FPlayGround).
-- 💻 [Explore the source](https://github.com/codex-app-dev/PlayGround).
-- 🛠️ [Check build runs](https://github.com/codex-app-dev/PlayGround/actions).
-- 🐛 [Report an issue](https://github.com/codex-app-dev/PlayGround/issues).
-- 👤 [Explore the creator's projects](https://omgithub.com/codex-app-dev).
-- 🌍 [Create with OMGithub](https://omgithub.com).
-<!-- omgithub:readme:end -->
+```sh
+python3 -m http.server 3002
+```
+
+Then visit [http://localhost:3002](http://localhost:3002).
+
+- **Move:** `A` / `D` or `←` / `→`
+- **Phase shift:** `Shift` or `Space` (briefly passes through hazards; recharges automatically)
+- **Touch:** Use the on-screen lane and phase buttons
+- **Cannons:** Fire automatically at sentries in your lane
+
+Reach the 60-second extraction point with hull integrity remaining. Rift surges corrupt a random lane; evade it or time a phase shift. Collect 12 shard cores for the full shard bonus.
