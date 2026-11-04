@@ -1,0 +1,26 @@
+{
+  "name": "playground",
+  "version": "1.0.0",
+  "description": "<!-- omgithub:readme:start --> ## 🚀 Build, play, and remix with OMGithub",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/codex-app-dev/PlayGround.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/codex-app-dev/PlayGround/issues"
+  },
+  "homepage": "https://github.com/codex-app-dev/PlayGround#readme",
+  "dependencies": {
+    "three": "^0.187.0"
+  },
+  "devDependencies": {
+    "vite": "^7.2.2"
+  }
+}

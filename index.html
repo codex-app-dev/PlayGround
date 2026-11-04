@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#0b0c14" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>SUNSET HEIST — Open City</title>
+    <meta name="description" content="An open-world neon city heist game. Steal cars, pull jobs, and outrun the heat." />
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="game-canvas" aria-label="Sunset Heist 3D game view"></canvas>
+
+      <div id="grade" aria-hidden="true"></div>
+      <div id="scanlines" aria-hidden="true"></div>
+      <div id="vignette" aria-hidden="true"></div>
+
+      <div id="hud" class="is-hidden" aria-live="polite">
+        <div class="hud-top-left">
+          <div class="brand-small">
+            <span class="brand-mark">S</span>
+            <span class="brand-copy">SUNSET<br /><b>HEIST</b></span>
+          </div>
+          <div class="mission-card">
+            <div class="mission-kicker"><span class="live-dot"></span><span id="mission-count">JOB 01 / 03</span></div>
+            <div class="mission-title" id="mission-title">THE CORNER STORE</div>
+            <div class="mission-objective" id="mission-objective">Drive to the liquor store</div>
+            <div class="mission-meta"><span id="mission-distance">31 M</span><span class="mission-sep">•</span><span id="mission-payout">PAYOUT $1,200</span></div>
+          </div>
+        </div>
+
+        <div class="hud-top-center">
+          <div id="wanted" class="wanted" aria-label="Wanted level">
+            <span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span>
+          </div>
+          <div class="district" id="district">OCEAN DRIVE • 19:42</div>
+        </div>
+
+        <div class="hud-top-right">
+          <div class="cash"><span class="cash-label">BANK</span><span class="cash-value" id="cash">$3,420</span></div>
+          <div class="vitals">
+            <div class="vital-row"><span class="vital-icon">✚</span><div class="vital-track"><div id="health-fill" class="vital-fill health"></div></div></div>
+            <div class="vital-row"><span class="vital-icon shield">◆</span><div class="vital-track"><div id="armor-fill" class="vital-fill armor"></div></div></div>
+          </div>
+        </div>
+
+        <div class="hud-bottom-left">
+          <div class="minimap-shell">
+            <canvas id="minimap" width="440" height="440"></canvas>
+            <div class="minimap-ring"></div>
+            <div class="compass"><span>N</span></div>
+            <div class="minimap-label" id="map-label">OCEAN DRIVE</div>
+          </div>
+          <div class="street-name"><span class="street-rule"></span><span id="street-name">OCEAN DRIVE</span></div>
+        </div>
+
+        <div class="hud-bottom-right">
+          <div class="weapon-card">
+            <div class="weapon-silhouette" aria-hidden="true">
+              <svg viewBox="0 0 120 52"><path d="M6 20h55l9-9h25v11h19v9H74l-5 17H51l6-17H35l-8 9H14l5-11H6z" /></svg>
+            </div>
+            <div class="weapon-copy"><span class="weapon-name">PISTOL</span><span class="weapon-ammo" id="ammo">12 / ∞</span></div>
+            <div class="reload-track"><div id="reload-fill"></div></div>
+          </div>
+        </div>
+
+        <div class="crosshair" id="crosshair" aria-hidden="true">
+          <i class="ch-t"></i><i class="ch-r"></i><i class="ch-b"></i><i class="ch-l"></i><span></span>
+        </div>
+
+        <div class="prompt" id="prompt">
+          <span class="prompt-key" id="prompt-key">E</span>
+          <span class="prompt-text" id="prompt-text">Get in vehicle</span>
+          <div class="prompt-progress"><div id="prompt-progress-fill"></div></div>
+        </div>
+
+        <div class="heat-banner" id="heat-banner">
+          <div class="heat-kicker">ESCAPE THE HEAT</div>
+          <div class="heat-time" id="heat-time">0:20</div>
+          <div class="heat-hint">Break line of sight. Keep moving.</div>
+        </div>
+
+        <div class="toast" id="toast"><span id="toast-text"></span></div>
+      </div>
+
+      <div id="start-screen" class="start-screen">
+        <div class="start-grain" aria-hidden="true"></div>
+        <div class="start-content">
+          <div class="eyebrow"><span class="eyebrow-rule"></span> AN OPEN-WORLD HEIST STORY <span class="eyebrow-rule short"></span></div>
+          <h1 class="title"><span class="title-sunset">SUNSET</span><span class="title-heist">HEIST</span></h1>
+          <p class="tagline">The city is yours after dark.<br /><span>Three scores. One way out.</span></p>
+
+          <div class="start-job">
+            <div class="start-job-left">
+              <span class="start-job-kicker">FIRST JOB</span>
+              <strong>THE CORNER STORE</strong>
+              <span>Ocean Drive · $1,200 payout</span>
+            </div>
+            <div class="start-job-reward"><span>RISK</span><b>★</b></div>
+          </div>
+
+          <button id="start-btn" type="button">START</button>
+
+          <div class="start-hints">
+            <span><b>WASD</b> MOVE</span><span><b>MOUSE</b> LOOK</span><span><b>E</b> INTERACT</span><span><b>F</b> FIRE</span>
+          </div>
+          <div class="start-foot">Steal a ride. Take the money. Lose the cops.</div>
+        </div>
+        <div class="start-right">
+          <div class="start-stat"><span>CITY</span><b>SUNSET BAY</b></div>
+          <div class="start-stat"><span>HEISTS</span><b>03</b></div>
+          <div class="start-stat"><span>WANTED</span><b class="hot">MAX</b></div>
+          <div class="start-version">SUNSET ENGINE / v1.0</div>
+        </div>
+      </div>
+
+      <div id="loading" class="loading">
+        <div class="loading-mark">S</div>
+        <div class="loading-bar"><i></i></div>
+        <div class="loading-text">BUILDING SUNSET BAY</div>
+      </div>
+
+      <div id="wasted" class="wasted">
+        <div class="wasted-kicker">YOU LOST THE MONEY</div>
+        <div class="wasted-title">WASTED</div>
+        <div class="wasted-sub">Respawning at Ocean Drive…</div>
+      </div>
+
+      <div id="job-complete" class="job-complete">
+        <div class="complete-kicker">SCORE SECURED</div>
+        <div class="complete-title">HEIST COMPLETE</div>
+        <div class="complete-cash" id="complete-cash">+$1,200</div>
+        <div class="complete-sub" id="complete-sub">Next job unlocked</div>
+      </div>
+
+      <div id="final-screen" class="final-screen">
+        <div class="final-kicker">SUNSET BAY IS YOURS</div>
+        <div class="final-title">CITY<br /><span>LEGEND</span></div>
+        <div class="final-copy">Three heists. Zero regrets.<br />You own the night now.</div>
+        <button id="restart-btn" type="button">PLAY AGAIN</button>
+      </div>
+
+      <div id="touch-controls" class="touch-controls" aria-hidden="true">
+        <div id="joystick-zone" class="joystick-zone"><div class="joystick-base"><div id="joystick-knob" class="joystick-knob"></div></div></div>
+        <div class="touch-look" id="touch-look"></div>
+        <div class="touch-buttons">
+          <button id="btn-fire" class="touch-btn fire" type="button" aria-label="Fire">FIRE</button>
+          <button id="btn-action" class="touch-btn action" type="button" aria-label="Interact">E</button>
+          <button id="btn-jump" class="touch-btn jump" type="button" aria-label="Jump">↑</button>
+          <button id="btn-run" class="touch-btn run" type="button" aria-label="Run">RUN</button>
+        </div>
+        <button id="btn-drive" class="touch-btn drive" type="button" aria-label="Enter or exit vehicle">E</button>
+      </div>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
