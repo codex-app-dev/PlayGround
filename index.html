@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#101619" />
+    <title>Shadows of the Lost Temple — Field Notes</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <main class="game-shell">
+      <header class="topbar">
+        <a class="brand" href="#" aria-label="Shadows of the Lost Temple home">
+          <span class="brand-mark" aria-hidden="true">✳</span>
+          <span><span class="eyebrow">A field investigation</span><strong>Shadows of the Lost Temple</strong></span>
+        </a>
+        <div class="top-actions">
+          <div class="chapter-chip"><span class="live-dot"></span><span id="chapterLabel">The Forgotten Expedition</span></div>
+          <button class="icon-button" id="restartBtn" title="Restart this level (R)">↺ <span>Restart</span></button>
+          <button class="icon-button" id="journalToggle" aria-expanded="true">▤ <span>Journal</span></button>
+        </div>
+      </header>
+
+      <section class="game-layout">
+        <div class="play-column">
+          <div class="scene-heading">
+            <div><p class="eyebrow" id="chapterKicker">CHAPTER 01 · THE DIG SITE</p><h1 id="levelTitle">The Buried Threshold</h1></div>
+            <div class="turn-counter"><span class="counter-icon">◷</span><span><b id="turnCount">0</b><small>STEPS</small></span></div>
+          </div>
+          <div class="board-frame">
+            <div class="board-topline"><span><i class="status-dot"></i> FIELD MAP</span><span id="mapHint">↑ ↓ ← → / WASD to move · E to interact</span></div>
+            <canvas id="gameCanvas" width="700" height="560" aria-label="Turn-based temple puzzle game board"></canvas>
+            <div class="board-caption"><span><i class="legend-ev">◆</i> Evelyn</span><span><i class="legend-relic">✦</i> Artifact</span><span><i class="legend-foe">◉</i> Sentinel</span><span><i class="legend-exit">⌑</i> Exit</span></div>
+            <div class="touch-controls" aria-label="Movement controls">
+              <button data-move="up" aria-label="Move up">↑</button>
+              <button data-move="left" aria-label="Move left">←</button>
+              <button data-move="down" aria-label="Move down">↓</button>
+              <button data-move="right" aria-label="Move right">→</button>
+              <button id="interactBtn" class="interact-button">Interact <kbd>E</kbd></button>
+            </div>
+          </div>
+          <div class="objective-bar"><span class="objective-icon">◎</span><div><small>CURRENT OBJECTIVE</small><strong id="objectiveLabel">Recover the brass seal and find the way out.</strong></div><span class="objective-state" id="objectiveState">IN PROGRESS</span></div>
+        </div>
+
+        <aside class="sidebar" id="sidebar">
+          <section class="side-card story-card">
+            <div class="card-heading"><span class="card-icon">⌕</span><h2>Field report</h2></div>
+            <p id="storyText"></p>
+            <div class="quote-note" id="clueText">“The truth lies beneath the silence.”</div>
+          </section>
+          <section class="side-card evidence-card">
+            <div class="card-heading"><span class="card-icon">▧</span><h2>Evidence log</h2><span class="evidence-count" id="evidenceCount">0 / 10</span></div>
+            <ul id="journalList" class="evidence-list"></ul>
+          </section>
+          <section class="side-card progress-card">
+            <div class="card-heading"><span class="card-icon">⌁</span><h2>Expedition</h2></div>
+            <div class="chapter-track" id="chapterTrack"></div>
+            <div class="progress-footer"><span id="starCount">0 / 30 stars</span><span id="outfitStatus">Field kit</span></div>
+          </section>
+          <p class="control-tip"><kbd>R</kbd> restart <span>·</span> <kbd>E</kbd> examine / use mechanism</p>
+        </aside>
+      </section>
+      <div class="toast" id="toast" role="status" aria-live="polite"></div>
+      <div class="modal-backdrop hidden" id="modalBackdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <section class="ending-card"><div class="ending-seal">✳</div><p class="eyebrow">THE EXPEDITION IS COMPLETE</p><h2 id="modalTitle">The truth was never buried.</h2><p id="endingText"></p><div class="ending-stats" id="endingStats"></div><button id="playAgainBtn">Return to the first field site</button></section>
+      </div>
+    </main>
+    <script src="./script.js"></script>
+  </body>
+</html>
