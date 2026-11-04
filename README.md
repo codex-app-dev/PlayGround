@@ -16,3 +16,15 @@
 - 👤 [Explore the creator's projects](https://go.ondev.store/codex-app-dev).
 - 🌍 [Create with OMGithub](https://go.ondev.store/).
 <!-- omgithub:readme:end -->
+
+## Ashen Oath
+
+A browser-based, third-person 3D boss rush. Enter the crucible and defeat three champions by reading their wind-ups, parrying at the flash for a riposte, and managing stamina and healing flasks.
+
+- **Move:** WASD or the on-screen directional pad
+- **Parry:** Q / on-screen **PARRY** — time it just as the tell ring flashes
+- **Dodge:** Space / on-screen **DODGE**
+- **Strike:** J, Enter, click/tap the arena, or on-screen **STRIKE**
+- **Heal:** F / on-screen **HEAL**
+
+Open `index.html` through a local web server to play. Three.js is loaded from jsDelivr.
