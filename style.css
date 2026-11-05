@@ -1,0 +1,130 @@
+:root {
+  --bg1: #0d1530;
+  --bg2: #1b2a48;
+  --panel: rgba(12, 16, 36, 0.7);
+  --panel-border: rgba(255, 255, 255, 0.3);
+  --gold: #f6d55c;
+  --sky: #80d3ff;
+  --grass: #50c65d;
+  --brick: #d66d3d;
+  --platform: #a56d44;
+  --danger: #d63b4f;
+  --player: #ef3b3b;
+  --player2: #add8ff;
+  --shadow: rgba(0, 0, 0, 0.28);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  height: 100%;
+  font-family: "Segoe UI", sans-serif;
+  background: radial-gradient(circle at top, #2f4f82 0%, var(--bg1) 45%, #090d1b 100%);
+  color: white;
+}
+
+body {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+}
+
+.game-shell {
+  width: min(96vw, 960px);
+  display: grid;
+  gap: 10px;
+}
+
+.hud {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(100px, 1fr));
+  gap: 10px;
+  padding: 12px 18px;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+}
+
+.hud div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.label {
+  opacity: 0.75;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+}
+
+.instructions {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.8);
+  text-align: center;
+  font-size: 0.82rem;
+}
+
+kbd {
+  padding: 2px 6px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.1);
+  font: inherit;
+  color: white;
+}
+
+#game {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  background: linear-gradient(#7ec7ff 0%, #bfe8ff 58%, #dff7ff 100%);
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-radius: 12px;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
+}
+
+.touch-controls {
+  display: none;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px 12px;
+}
+
+.left-right {
+  display: flex;
+  gap: 10px;
+}
+
+button {
+  border: none;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.12);
+  color: white;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22);
+}
+
+.touch-controls button {
+  min-width: 90px;
+  min-height: 54px;
+  font-size: 1.05rem;
+}
+
+.jump {
+  padding: 0 18px;
+}
+
+@media (pointer: coarse) {
+  .touch-controls {
+    display: flex;
+  }
+}
