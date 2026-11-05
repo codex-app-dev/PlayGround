@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Starfall Defense</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%AD%90%3C/text%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="hud-bar">
+        <div class="brand-wrap">
+          <div class="brand-badge">★</div>
+          <div>
+            <div class="brand-title">Starfall Defense</div>
+            <div class="brand-subtitle">Arcade survival</div>
+          </div>
+        </div>
+        <div class="stats-panel">
+          <div class="stat"><span>Score</span><strong id="scoreLabel">0</strong></div>
+          <div class="stat"><span>Wave</span><strong id="waveLabel">1</strong></div>
+          <div class="stat"><span>Lives</span><strong id="livesLabel">3</strong></div>
+        </div>
+      </header>
+
+      <main class="game-wrap">
+        <canvas id="gameCanvas" width="960" height="540" aria-label="Starfall Defense game"></canvas>
+
+        <div id="overlay" class="overlay visible">
+          <div class="panel">
+            <p class="eyebrow">NEON DEFENSE</p>
+            <h1 id="overlayTitle">Starfall Defense</h1>
+            <p id="overlayText">Pilot the cruiser, hold the line, and survive the meteor storm.</p>
+            <button id="startButton" type="button">Start Mission</button>
+          </div>
+        </div>
+      </main>
+
+      <p class="controls-hint">Move: ← → or A / D <span>•</span> Fire: Space or ↑ <span>•</span> Collect green life and gold bonus drops</p>
+      <div class="touch-controls" aria-label="Game controls">
+        <div class="stick-group">
+          <button class="touch-btn" data-control="left" type="button">◀</button>
+          <button class="touch-btn" data-control="right" type="button">▶</button>
+        </div>
+        <button class="touch-btn fire-btn" data-control="fire" type="button">FIRE</button>
+      </div>
+    </div>
+
+    <script src="game.js"></script>
+  </body>
+</html>
