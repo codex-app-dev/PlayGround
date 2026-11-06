@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NEON BREAKER — Arcade</title><link rel="icon" href="data:,">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+:root{color-scheme:dark;--ink:#f4f4ff;--muted:#8789a6;--cyan:#76f6df;--pink:#ff70bd}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% 0%,#202644 0,#111426 52%,#0a0c17 100%);color:var(--ink);font-family:'Space Grotesk',sans-serif;display:grid;place-items:center;padding:24px}
+.shell{width:min(100%,1000px)}header{display:flex;align-items:end;justify-content:space-between;margin:0 0 16px;gap:20px}.eyebrow,.label,.hint{font:500 11px 'DM Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}h1{font-size:clamp(25px,4vw,39px);line-height:1;margin:7px 0 0;letter-spacing:-.06em}h1 span{color:var(--cyan)}.stats{display:flex;gap:12px}.stat{min-width:92px;padding:10px 14px;border:1px solid #ffffff16;background:#ffffff08;border-radius:12px}.label{font-size:9px}.value{font-size:21px;font-weight:600;margin-top:3px}.stage{position:relative;border:1px solid #ffffff20;border-radius:18px;overflow:hidden;background:#0b1020;box-shadow:0 22px 80px #0008,0 0 50px #69e9d00b}canvas{display:block;width:100%;height:auto;touch-action:none}.overlay{position:absolute;inset:0;display:grid;place-items:center;background:linear-gradient(90deg,#090d1bc9,#10152acc);text-align:center;transition:opacity .2s}.overlay.hidden{opacity:0;pointer-events:none}.card{padding:24px;max-width:380px}.card .eyebrow{color:var(--cyan)}h2{font-size:clamp(28px,5vw,46px);margin:10px 0;letter-spacing:-.06em}p{color:#b4b6ca;line-height:1.55;margin:0 auto 20px;max-width:320px;font-size:14px}.btn{border:0;border-radius:10px;padding:13px 22px;background:var(--cyan);color:#101522;font:700 14px 'Space Grotesk',sans-serif;cursor:pointer;box-shadow:0 5px 25px #76f6df35;transition:transform .15s,filter .15s}.btn:hover{transform:translateY(-2px);filter:brightness(1.08)}footer{display:flex;justify-content:space-between;align-items:center;margin-top:14px;gap:12px}.hint{letter-spacing:.05em;text-transform:none;font-size:11px}.restart{background:none;border:1px solid #ffffff24;color:#c5c6d6;border-radius:8px;padding:8px 12px;font:500 11px 'DM Mono',monospace;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}.restart:hover{border-color:var(--cyan);color:var(--cyan)}@media(max-width:600px){body{padding:16px}.stats{gap:6px}.stat{min-width:64px;padding:8px}.value{font-size:17px}.hint{max-width:220px;line-height:1.5}}
+</style>
+</head>
+<body><main class="shell">
+<header><div><div class="eyebrow">A tiny arcade challenge</div><h1>NEON <span>BREAKER</span></h1></div><div class="stats"><div class="stat"><div class="label">Score</div><div class="value" id="score">0000</div></div><div class="stat"><div class="label">Lives</div><div class="value" id="lives">3</div></div></div></header>
+<div class="stage"><canvas id="game" width="960" height="600" aria-label="Breakout game"></canvas><div class="overlay" id="overlay"><div class="card"><div class="eyebrow" id="overline">Ready when you are</div><h2 id="headline">Clear the grid.</h2><p id="message">Move your paddle to keep the ball in play. Break every neon tile to win.</p><button class="btn" id="play">Start game <span>→</span></button></div></div></div>
+<footer><div class="hint">← → or A / D to move <span aria-hidden="true">·</span> Mouse / touch also works</div><button class="restart" id="restart">↻ Restart</button></footer>
+</main>
+<script>
+const canvas=document.querySelector('#game'),ctx=canvas.getContext('2d'),overlay=document.querySelector('#overlay');
+const scoreEl=document.querySelector('#score'),livesEl=document.querySelector('#lives');
+const W=960,H=600, paddle={x:420,y:550,w:120,h:13},ball={x:480,y:510,r:9,vx:4.2,vy:-5.2};
+let score=0,lives=3,playing=false,keys={},bricks=[],last=0;
+const colors=['#ff70bd','#ff9b72','#ffd36c','#76f6df'];
+function makeBricks(){bricks=[];for(let row=0;row<5;row++)for(let col=0;col<10;col++)bricks.push({x:48+col*88,y:78+row*34,w:76,h:21,hp:row<2?2:1,color:colors[row%4],alive:true})}
+function resetBall(){ball.x=paddle.x+paddle.w/2;ball.y=paddle.y-16;ball.vx=(Math.random()>.5?1:-1)*4.2;ball.vy=-5.2}
+function reset(){score=0;lives=3;playing=false;paddle.x=(W-paddle.w)/2;makeBricks();resetBall();updateUI();show('Ready when you are','Clear the grid.','Move your paddle to keep the ball in play. Break every neon tile to win.','Start game →')}
+function show(kicker,title,text,button){document.querySelector('#overline').textContent=kicker;document.querySelector('#headline').textContent=title;document.querySelector('#message').textContent=text;document.querySelector('#play').textContent=button;overlay.classList.remove('hidden')}
+function start(){if(lives===0||bricks.every(b=>!b.alive))reset();playing=true;overlay.classList.add('hidden');last=performance.now()}
+function updateUI(){scoreEl.textContent=String(score).padStart(4,'0');livesEl.textContent=lives}
+function end(win){playing=false;show(win?'Grid cleared!':'Game over',win?'Beautiful work.':'One more try?','Final score: '+score+' points. Hit restart whenever you’re ready.',win?'Play again →':'Restart →')}
+function draw(){ctx.clearRect(0,0,W,H);let g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#111a31');g.addColorStop(1,'#0a1020');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+ctx.strokeStyle='#9bb2ff0d';ctx.lineWidth=1;for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}for(let y=0;y<H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+bricks.forEach(b=>{if(!b.alive)return;ctx.shadowBlur=15;ctx.shadowColor=b.color;ctx.fillStyle=b.color;ctx.beginPath();ctx.roundRect(b.x,b.y,b.w,b.h,6);ctx.fill();ctx.shadowBlur=0;if(b.hp===2){ctx.fillStyle='#ffffff77';ctx.fillRect(b.x+8,b.y+5,b.w-16,2)}});
+ctx.shadowBlur=22;ctx.shadowColor='#76f6df';ctx.fillStyle='#76f6df';ctx.beginPath();ctx.roundRect(paddle.x,paddle.y,paddle.w,paddle.h,8);ctx.fill();ctx.shadowBlur=0;
+ctx.shadowBlur=22;ctx.shadowColor='#fff';ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(ball.x,ball.y,ball.r,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+}
+function tick(now){let dt=Math.min((now-last)/16.67,2);last=now;if(playing){if(keys.ArrowLeft||keys.a||keys.A)paddle.x-=8*dt;if(keys.ArrowRight||keys.d||keys.D)paddle.x+=8*dt;paddle.x=Math.max(12,Math.min(W-paddle.w-12,paddle.x));ball.x+=ball.vx*dt;ball.y+=ball.vy*dt;
+if(ball.x<ball.r||ball.x>W-ball.r)ball.vx*=-1;if(ball.y<ball.r)ball.vy=Math.abs(ball.vy);
+if(ball.vy>0&&ball.y+ball.r>=paddle.y&&ball.y-ball.r<paddle.y+paddle.h&&ball.x>paddle.x&&ball.x<paddle.x+paddle.w){let hit=(ball.x-(paddle.x+paddle.w/2))/(paddle.w/2);ball.vx=hit*6.4;ball.vy=-Math.sqrt(Math.max(16,ball.vx*ball.vx+ball.vy*ball.vy));ball.y=paddle.y-ball.r}
+bricks.forEach(b=>{if(!b.alive||ball.x+ball.r<b.x||ball.x-ball.r>b.x+b.w||ball.y+ball.r<b.y||ball.y-ball.r>b.y+b.h)return;b.hp--;if(b.hp<=0){b.alive=false;score+=10}else score+=5;ball.vy*=-1;updateUI()});
+if(ball.y>H+20){lives--;updateUI();if(lives<=0)end(false);else resetBall()}if(bricks.every(b=>!b.alive))end(true)}draw();requestAnimationFrame(tick)}
+function pointer(e){const r=canvas.getBoundingClientRect();paddle.x=(e.clientX-r.left)*W/r.width-paddle.w/2;paddle.x=Math.max(12,Math.min(W-paddle.w-12,paddle.x))}
+canvas.addEventListener('pointermove',pointer);canvas.addEventListener('pointerdown',e=>{pointer(e);if(!playing)start()});document.addEventListener('keydown',e=>{keys[e.key]=true;if(['ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();if(e.key===' '&&!playing)start()});document.addEventListener('keyup',e=>keys[e.key]=false);
+document.querySelector('#play').onclick=start;document.querySelector('#restart').onclick=reset;makeBricks();resetBall();updateUI();requestAnimationFrame(tick);
+</script></body></html>
