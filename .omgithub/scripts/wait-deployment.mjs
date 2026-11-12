@@ -54,8 +54,8 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   const jobStart = /^\d+$/.test(env.JOB_STARTED_AT || '') ? Number(env.JOB_STARTED_AT) * 1000 : Date.parse(env.JOB_STARTED_AT || '')
   try {
     const result = await waitForDeployment({ directory: env.OPENCODE_WEB_DIR, log: message => console.log(message),
-      // Leave room for checkpoint and cleanup steps inside the 355-minute job timeout.
-      deadlineAt: Number.isFinite(jobStart) ? jobStart + 330 * 60_000 : Infinity,
+      // Leave room for checkpoint and cleanup steps inside the 305-minute job timeout.
+      deadlineAt: Number.isFinite(jobStart) ? jobStart + 300 * 60_000 : Infinity,
       reconcile: async () => {
         if (!env.OPENCODE_CONTROL_PORT) return
         const response = await fetch(`http://127.0.0.1:${env.OPENCODE_CONTROL_PORT}/omgithub/reconcile`, { signal: AbortSignal.timeout(10000) })

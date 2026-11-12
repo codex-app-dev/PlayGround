@@ -24,6 +24,11 @@ export async function watchRunner(mode, { env = process.env, now = Date.now, pau
         last = now(); delivery = key
       }
     } catch {}
+    try {
+      const stopped = JSON.parse(readFileSync(join(dir, 'runner-stop.json'), 'utf8'))
+      if (mode === 'build') throw new Error(stopped.reason)
+      return stopped.reason
+    } catch (error) { if (error.code !== 'ENOENT' && !(error instanceof SyntaxError)) throw error }
     const reason = runnerDeadline({ started: start, lastActivity: last, now: now() })
     if (reason) {
       writeFileSync(join(dir, 'runner-stop.json'), JSON.stringify({ reason, at: new Date(now()).toISOString() }))

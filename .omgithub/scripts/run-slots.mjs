@@ -8,8 +8,8 @@ export async function enforceSlots({ repository, run, token, request = fetch, pa
     return response.status === 204 ? null : response.json()
   }
   const candidates = []
-  for (let page = 1; ; page++) {
-    const rows = (await api(`/actions/workflows/opencode.yml/runs?status=in_progress&per_page=100&page=${page}`)).workflow_runs || []
+  for (const status of ['in_progress', 'queued']) for (let page = 1; ; page++) {
+    const rows = (await api(`/actions/workflows/opencode.yml/runs?status=${status}&per_page=100&page=${page}`)).workflow_runs || []
     for (const row of rows) {
       if (String(row.id) === String(run)) continue
       const jobs = (await api(`/actions/runs/${row.id}/jobs?per_page=100`)).jobs || []
@@ -17,7 +17,9 @@ export async function enforceSlots({ repository, run, token, request = fetch, pa
     }
     if (rows.length < 100) break
   }
-  candidates.push({ id: run })
+  const unique = new Map(candidates.map(row => [String(row.id), row]))
+  candidates.length = 0
+  candidates.push(...unique.values(), { id: run })
   candidates.sort((a,b) => BigInt(a.id) > BigInt(b.id) ? -1 : 1)
   const victims = candidates.slice(2)
   for (const row of victims) {
