@@ -87,7 +87,7 @@ download_with_retry() {
   while (( attempt < MAX_RETRIES )); do
     attempt=$((attempt + 1))
     echo "Download attempt $attempt/$MAX_RETRIES: $url"
-    
+
     if curl --fail --silent --show-error --location \
          --connect-timeout "$CONNECT_TIMEOUT" \
          --max-time "$MAX_TIME" \
@@ -98,7 +98,7 @@ download_with_retry() {
       fi
       echo "Download produced empty or missing file" >&2
     fi
-    
+
     if (( attempt < MAX_RETRIES )); then
       echo "Retrying in ${delay}s..." >&2
       if [[ "${FRP_DOWNLOAD_TEST_MODE:-}" != "1" ]]; then
@@ -107,7 +107,7 @@ download_with_retry() {
       delay=$((delay * 2))
     fi
   done
-  
+
   echo "ERROR: Download failed after $MAX_RETRIES attempts" >&2
   echo "  URL: $url" >&2
   echo "  Host: $(hostname)" >&2
@@ -132,14 +132,14 @@ fi
 # Download if not cached or cache invalid
 if [[ ! -f "$OUTPUT_ARCHIVE" ]] || ! verify_checksum "$OUTPUT_ARCHIVE" "$EXPECTED_HASH"; then
   echo "Downloading FRP ${FRP_VERSION} for ${FRP_ASSET}..."
-  
+
   TEMP_DOWNLOAD="${OUTPUT_DIR}/frp-download-$$.tmp"
   trap 'rm -f "$TEMP_DOWNLOAD"' EXIT
-  
+
   if ! download_with_retry "$DOWNLOAD_URL" "$TEMP_DOWNLOAD"; then
     exit 1
   fi
-  
+
   # Verify downloaded archive
   echo "Verifying checksum..."
   if ! verify_checksum "$TEMP_DOWNLOAD" "$EXPECTED_HASH"; then
@@ -149,10 +149,10 @@ if [[ ! -f "$OUTPUT_ARCHIVE" ]] || ! verify_checksum "$OUTPUT_ARCHIVE" "$EXPECTE
     rm -f "$TEMP_DOWNLOAD"
     exit 1
   fi
-  
+
   mv "$TEMP_DOWNLOAD" "$OUTPUT_ARCHIVE"
   trap - EXIT
-  
+
   # Update cache
   cp "$OUTPUT_ARCHIVE" "$CACHE_FILE"
   echo "$EXPECTED_HASH  $ARCHIVE_NAME" > "$CACHE_HASH_FILE"

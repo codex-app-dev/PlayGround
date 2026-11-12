@@ -22,7 +22,7 @@ export async function fetchRoutingSettings({ origin = 'https://omgithub.com', ti
 // Resolve effective WARP decision combining per-user request and admin settings.
 // Route order for free models:
 // - Both off: directOC → ondev
-// - WARP on (admin or user): directOC → WARP → ondev  
+// - WARP on (admin or user): directOC → WARP → ondev
 // - Skip on: ondev only
 // - Both on: WARP → ondev
 export function resolveRouting({ userWarpRequested, adminSettings, fusionEnabled, labels = [] }) {
