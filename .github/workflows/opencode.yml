@@ -132,6 +132,7 @@ jobs:
       contents: write
       issues: write
       actions: write
+      pull-requests: write
     env:
       SSH_NAME: opencode-issue-${{ needs.prepare.outputs.issue_number }}-${{ github.run_id }}-ssh
       OPENCODE_WEB_PORT: 4096
