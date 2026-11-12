@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Square — a tiny game</title>
+<meta name="theme-color" content="#0b0d12" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%230b0d12'/%3E%3Crect x='4' y='4' width='8' height='8' fill='%23eef1f6'/%3E%3Crect x='6.5' y='6.5' width='3' height='3' fill='%23ffd166'/%3E%3C/svg%3E" />
+<style>
+  :root {
+    --bg: #0b0d12;
+    --ink: #eef1f6;
+    --dim: #6b7385;
+    --accent: #ffd166;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    height: 100%;
+    overflow: hidden;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    -webkit-tap-highlight-color: transparent;
+  }
+  canvas { display: block; width: 100vw; height: 100vh; }
+
+  .hud {
+    position: fixed;
+    inset: 0 0 auto 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 22px 26px;
+    pointer-events: none;
+    font-size: 12px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+  }
+  .brand { color: var(--dim); }
+  .brand b { color: var(--ink); font-weight: 600; }
+  .stats { display: flex; gap: 26px; }
+  .stats span { color: var(--dim); }
+  .stats b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .stats .accent { color: var(--accent); }
+
+  .hint {
+    position: fixed;
+    left: 50%;
+    bottom: 34px;
+    transform: translateX(-50%);
+    color: var(--dim);
+    font-size: 12px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    transition: opacity .6s ease;
+    pointer-events: none;
+  }
+  .hint.gone { opacity: 0; }
+  .hint kbd {
+    display: inline-block;
+    padding: 3px 6px;
+    margin: 0 2px;
+    border: 1px solid #2a3040;
+    border-bottom-width: 2px;
+    border-radius: 4px;
+    color: var(--ink);
+    font: inherit;
+  }
+
+  .overlay {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    background: rgba(11, 13, 18, .72);
+    backdrop-filter: blur(4px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .3s ease;
+  }
+  .overlay.show { opacity: 1; pointer-events: auto; }
+  .card { text-align: center; }
+  .card h1 {
+    margin: 0 0 10px;
+    font-size: clamp(36px, 8vw, 64px);
+    letter-spacing: .1em;
+    font-weight: 600;
+  }
+  .card p { margin: 0 0 26px; color: var(--dim); font-size: 13px; letter-spacing: .12em; }
+  .card p b { color: var(--accent); font-weight: 600; }
+  .card button {
+    appearance: none;
+    border: 1px solid #333b4e;
+    background: var(--ink);
+    color: var(--bg);
+    font: inherit;
+    font-size: 12px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    padding: 14px 26px;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: transform .12s ease, background .12s ease;
+  }
+  .card button:hover { transform: translateY(-2px); background: var(--accent); }
+  .card button:active { transform: translateY(0); }
+  .card .sub { margin-top: 16px; font-size: 11px; color: var(--dim); letter-spacing: .1em; }
+
+  @media (max-width: 520px) {
+    .hud { padding: 18px 18px; font-size: 11px; letter-spacing: .1em; }
+    .stats { gap: 16px; }
+    .hint { bottom: 24px; font-size: 10px; }
+  }
+</style>
+</head>
+<body>
+<canvas id="game" aria-label="Square game board"></canvas>
+
+<header class="hud">
+  <div class="brand"><b>■</b> square</div>
+  <div class="stats">
+    <span>orbs <b id="score">0/10</b></span>
+    <span>time <b class="accent" id="time">0.0</b></span>
+  </div>
+</header>
+
+<div class="hint" id="hint">Move with <kbd>←</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>→</kbd> or <kbd>WASD</kbd></div>
+
+<div class="overlay" id="overlay">
+  <div class="card">
+    <h1>Cleared</h1>
+    <p>time <b id="finalTime">0.00s</b> · best <b id="bestTime">—</b></p>
+    <button id="again">Play again</button>
+    <div class="sub">or press enter</div>
+  </div>
+</div>
+
+<script>
+(() => {
+  'use strict';
+
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+  const scoreEl = document.getElementById('score');
+  const timeEl = document.getElementById('time');
+  const hintEl = document.getElementById('hint');
+  const overlay = document.getElementById('overlay');
+  const finalTimeEl = document.getElementById('finalTime');
+  const bestTimeEl = document.getElementById('bestTime');
+
+  const TOTAL = 10;
+  const PLAYER = 26;
+  const SPEED = 430;
+  const ORB = 13;
+  const ACCENT = '#ffd166';
+  const KEY = 'square.best.v1';
+
+  let W = 0, H = 0, dpr = 1;
+  let player, orbs, particles, keys, started, won, elapsed, score, last, trailTimer, clock;
+
+  const rand = (min, max) => min + Math.random() * (max - min);
+
+  function best() {
+    const value = Number(localStorage.getItem(KEY));
+    return Number.isFinite(value) && value > 0 ? value : null;
+  }
+
+  function resize() {
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = window.innerWidth;
+    H = window.innerHeight;
+    canvas.width = Math.round(W * dpr);
+    canvas.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if (player) {
+      player.x = Math.min(Math.max(player.x, PLAYER / 2 + 14), W - PLAYER / 2 - 14);
+      player.y = Math.min(Math.max(player.y, PLAYER / 2 + 80), H - PLAYER / 2 - 70);
+    }
+    orbs?.forEach(o => {
+      o.x = Math.min(Math.max(o.x, 40), W - 40);
+      o.y = Math.min(Math.max(o.y, 100), H - 70);
+    });
+  }
+
+  function spawnOrbs() {
+    const list = [];
+    const px = W / 2, py = H / 2;
+    let guard = 0;
+    while (list.length < TOTAL && guard++ < 4000) {
+      const margin = Math.min(70, Math.max(34, W * 0.08));
+      const x = rand(margin, Math.max(margin + 1, W - margin));
+      const y = rand(110, Math.max(111, H - margin));
+      if (Math.hypot(x - px, y - py) < Math.min(W, H) * 0.24) continue;
+      if (list.some(o => Math.hypot(o.x - x, o.y - y) < 66)) continue;
+      list.push({ x, y, phase: Math.random() * Math.PI * 2, alive: true });
+    }
+    return list;
+  }
+
+  function reset() {
+    player = { x: W / 2, y: H / 2, vx: 0, vy: 0 };
+    orbs = spawnOrbs();
+    particles = [];
+    keys = new Set();
+    started = false;
+    won = false;
+    elapsed = 0;
+    score = 0;
+    clock = 0;
+    trailTimer = 0;
+    last = performance.now();
+    scoreEl.textContent = `0/${TOTAL}`;
+    timeEl.textContent = '0.0';
+    hintEl.classList.remove('gone');
+    overlay.classList.remove('show');
+  }
+
+  function burst(x, y, color, count = 16, power = 190) {
+    for (let i = 0; i < count; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const s = rand(power * 0.25, power);
+      particles.push({
+        x, y,
+        vx: Math.cos(a) * s,
+        vy: Math.sin(a) * s,
+        life: rand(0.35, 0.8),
+        max: 0.8,
+        size: rand(1.5, 4),
+        color
+      });
+    }
+  }
+
+  function collect(o) {
+    o.alive = false;
+    score++;
+    scoreEl.textContent = `${score}/${TOTAL}`;
+    burst(o.x, o.y, ACCENT, 22, 240);
+    if (score === TOTAL) finish();
+  }
+
+  function finish() {
+    won = true;
+    const previous = best();
+    const isBest = previous === null || elapsed < previous;
+    if (isBest) localStorage.setItem(KEY, elapsed.toFixed(3));
+    finalTimeEl.textContent = `${elapsed.toFixed(2)}s`;
+    bestTimeEl.textContent = `${(isBest ? elapsed : previous).toFixed(2)}s${isBest ? ' ★' : ''}`;
+    burst(player.x, player.y, '#eef1f6', 40, 300);
+    overlay.classList.add('show');
+    hintEl.classList.add('gone');
+  }
+
+  function movement() {
+    let dx = 0, dy = 0;
+    if (keys.has('left')) dx -= 1;
+    if (keys.has('right')) dx += 1;
+    if (keys.has('up')) dy -= 1;
+    if (keys.has('down')) dy += 1;
+    if (dx && dy) { const k = Math.SQRT1_2; dx *= k; dy *= k; }
+    return [dx, dy];
+  }
+
+  function update(dt) {
+    clock += dt;
+    if (won) {
+      updateParticles(dt);
+      return;
+    }
+    const [dx, dy] = movement();
+    if (!started && (dx || dy)) {
+      started = true;
+      hintEl.classList.add('gone');
+    }
+    if (started) {
+      elapsed += dt;
+      timeEl.textContent = elapsed.toFixed(1);
+    }
+
+    player.x = Math.min(Math.max(player.x + dx * SPEED * dt, PLAYER / 2 + 10), W - PLAYER / 2 - 10);
+    player.y = Math.min(Math.max(player.y + dy * SPEED * dt, PLAYER / 2 + 64), H - PLAYER / 2 - 54);
+
+    if (dx || dy) {
+      trailTimer -= dt;
+      if (trailTimer <= 0) {
+        trailTimer = 0.045;
+        particles.push({
+          x: player.x + rand(-5, 5),
+          y: player.y + rand(-5, 5),
+          vx: rand(-14, 14),
+          vy: rand(-14, 14),
+          life: 0.32,
+          max: 0.32,
+          size: rand(2, 4.5),
+          color: '#aab2c5'
+        });
+      }
+    }
+
+    for (const o of orbs) {
+      if (!o.alive) continue;
+      if (Math.abs(o.x - player.x) < (ORB + PLAYER) / 2 && Math.abs(o.y - player.y) < (ORB + PLAYER) / 2) collect(o);
+    }
+    updateParticles(dt);
+  }
+
+  function updateParticles(dt) {
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.life -= dt;
+      if (p.life <= 0) { particles.splice(i, 1); continue; }
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.vx *= 0.94;
+      p.vy *= 0.94;
+    }
+  }
+
+  function drawGrid() {
+    ctx.fillStyle = '#0b0d12';
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = 'rgba(120, 132, 158, .10)';
+    const gap = 34;
+    for (let x = gap / 2; x < W; x += gap) {
+      for (let y = gap / 2 + 10; y < H; y += gap) {
+        ctx.fillRect(x, y, 1.4, 1.4);
+      }
+    }
+  }
+
+  function drawOrb(o) {
+    const pulse = 1 + Math.sin(clock * 3 + o.phase) * 0.12;
+    ctx.save();
+    ctx.translate(o.x, o.y);
+    ctx.rotate(clock * 0.9 + o.phase);
+    ctx.shadowColor = ACCENT;
+    ctx.shadowBlur = 18;
+    ctx.fillStyle = ACCENT;
+    const s = ORB * 1.35 * pulse;
+    ctx.fillRect(-s / 2, -s / 2, s, s);
+    ctx.restore();
+    ctx.save();
+    ctx.translate(o.x, o.y);
+    ctx.rotate(-clock * 0.5 + o.phase);
+    ctx.fillStyle = 'rgba(255, 240, 190, .9)';
+    const s2 = ORB * 0.55 * pulse;
+    ctx.fillRect(-s2 / 2, -s2 / 2, s2, s2);
+    ctx.restore();
+  }
+
+  function drawPlayer() {
+    const x = player.x, y = player.y, s = PLAYER;
+    const [dx, dy] = movement();
+    const lean = dx * 2.2;
+    const leanY = dy * 2.2;
+
+    ctx.save();
+    ctx.shadowColor = 'rgba(230, 238, 255, .55)';
+    ctx.shadowBlur = 26;
+    ctx.fillStyle = '#eef1f6';
+    ctx.fillRect(x - s / 2 + lean, y - s / 2 + leanY, s, s);
+    ctx.restore();
+
+    ctx.fillStyle = '#0b0d12';
+    ctx.fillRect(x - 5 + lean, y - 5 + leanY, 10, 10);
+    ctx.fillStyle = ACCENT;
+    ctx.fillRect(x - 2 + lean, y - 2 + leanY, 4, 4);
+  }
+
+  function render() {
+    drawGrid();
+    for (const o of orbs) if (o.alive) drawOrb(o);
+
+    for (const p of particles) {
+      const a = Math.max(0, p.life / p.max);
+      ctx.globalAlpha = a;
+      ctx.fillStyle = p.color;
+      ctx.fillRect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size);
+    }
+    ctx.globalAlpha = 1;
+    drawPlayer();
+  }
+
+  function frame(now) {
+    const dt = Math.min((now - last) / 1000, 0.05);
+    last = now;
+    update(dt);
+    render();
+    requestAnimationFrame(frame);
+  }
+
+  const keyMap = {
+    ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'up', ArrowDown: 'down',
+    a: 'left', d: 'right', w: 'up', s: 'down'
+  };
+
+  window.addEventListener('keydown', (event) => {
+    const key = event.key.length === 1 ? event.key.toLowerCase() : event.key;
+    if (key === 'Enter' && won) { event.preventDefault(); reset(); return; }
+    if (key === 'r' && !won) { event.preventDefault(); reset(); return; }
+    const dir = keyMap[key];
+    if (!dir) return;
+    event.preventDefault();
+    keys.add(dir);
+  });
+
+  window.addEventListener('keyup', (event) => {
+    const key = event.key.length === 1 ? event.key.toLowerCase() : event.key;
+    const dir = keyMap[key];
+    if (dir) keys.delete(dir);
+  });
+
+  window.addEventListener('blur', () => keys.clear());
+  window.addEventListener('resize', resize);
+  document.getElementById('again').addEventListener('click', reset);
+
+  resize();
+  reset();
+  requestAnimationFrame((now) => { last = now; frame(now); });
+})();
+</script>
+</body>
+</html>
