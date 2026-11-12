@@ -5,7 +5,7 @@ export async function enforceSlots({ repository, run, token, request = fetch, pa
   const api = async (path, method = 'GET') => {
     const response = await request(`https://api.github.com/repos/${repository}${path}`, { method, headers: { authorization: `Bearer ${token}`, accept: 'application/vnd.github+json' }, signal: AbortSignal.timeout(15000) })
     if (!response.ok) throw new Error(`Runner slots: GitHub HTTP ${response.status}`)
-    return response.status === 204 ? null : response.json()
+    return method === 'POST' || response.status === 204 ? null : response.json()
   }
   const candidates = []
   for (const status of ['in_progress', 'queued']) for (let page = 1; ; page++) {

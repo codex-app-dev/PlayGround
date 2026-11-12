@@ -33,7 +33,13 @@ export async function watchRunner(mode, { env = process.env, now = Date.now, pau
     if (reason) {
       writeFileSync(join(dir, 'runner-stop.json'), JSON.stringify({ reason, at: new Date(now()).toISOString() }))
       console.log(reason)
-      if (mode === 'build') throw new Error(reason)
+      if (mode === 'build') {
+        for (const file of ['opencode-run.pid', 'lifecycle.pid']) try {
+          const pid = Number(readFileSync(join(dir, file), 'utf8').trim())
+          if (Number.isSafeInteger(pid) && pid > 1) process.kill(pid, 'SIGTERM')
+        } catch {}
+        throw new Error(reason)
+      }
       return reason
     }
     if (mode === 'build') try { readFileSync(join(dir, 'opencode-run.exit')); return } catch {}
