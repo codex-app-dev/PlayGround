@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <meta name="theme-color" content="#07131c" />
+  <title>Turbo League — 3D Arena</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="game-shell">
+    <canvas id="arena" aria-label="3D car soccer arena"></canvas>
+    <div class="vignette"></div>
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="Turbo League home"><span class="brand-mark">T</span><span>TURBO<span class="brand-light">LEAGUE</span></span></a>
+      <div class="match-tag"><i></i> EXHIBITION MATCH <span>•</span> 1V1</div>
+      <button class="sound-button" id="soundButton" aria-label="Toggle sound"><span class="sound-icon">♪</span><span>SOUND ON</span></button>
+    </header>
+    <section class="scoreboard" aria-live="polite">
+      <div class="score-team blue-team"><span class="team-name">ORBITAL</span><span class="score" id="blueScore">0</span></div>
+      <div class="clock-wrap"><span class="clock-label">MATCH TIME</span><span id="clock">05:00</span><span class="period">REGULATION</span></div>
+      <div class="score-team orange-team"><span class="score" id="orangeScore">0</span><span class="team-name">SOLARIS</span></div>
+    </section>
+    <div class="event-banner" id="eventBanner"><span>GO!</span></div>
+    <div class="left-hud">
+      <div class="hud-label"><span class="live-dot"></span> LIVE ARENA</div>
+      <div class="ball-status"><span class="ball-mini"></span><span>BALL CAM <b id="ballCamLabel">ON</b></span><button id="ballCamToggle" aria-label="Toggle ball camera">V</button></div>
+      <div class="boost-pickup-hint" id="pickupHint">+ BOOST</div>
+    </div>
+    <div class="right-hud">
+      <div class="speed-wrap"><div class="speed-number" id="speed">000</div><div class="speed-unit">KM/H</div><div class="speed-tick"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div></div>
+      <div class="boost-wrap"><div class="boost-label"><span>BOOST</span><span id="boostValue">100</span></div><div class="boost-track"><div id="boostFill"></div><div class="boost-glow"></div></div><div class="boost-ready" id="boostReady">● BOOST READY</div></div>
+    </div>
+    <div class="bottom-hud"><div class="controls-legend"><span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> <b>DRIVE</b></span><span><kbd>SHIFT</kbd> <b>BOOST</b></span><span><kbd>SPACE</kbd> <b>JUMP</b></span><span><kbd>V</kbd> <b>BALL CAM</b></span></div><button class="pause-button" id="pauseButton"><span>Ⅱ</span> PAUSE <kbd>ESC</kbd></button></div>
+    <aside class="toast" id="toast"></aside>
+    <section class="overlay" id="startOverlay">
+      <div class="overlay-grid"></div><div class="overlay-content">
+        <div class="eyebrow"><span class="eyebrow-line"></span> THE ARENA IS YOURS <span class="eyebrow-line"></span></div>
+        <h1>DRIVE.<br><em>FLY.</em> SCORE.</h1>
+        <p>Fast cars. One giant ball. No rules but the clock.</p>
+        <button class="play-button" id="playButton"><span>ENTER THE ARENA</span><b>→</b></button>
+        <div class="overlay-controls"><span>WASD <i>DRIVE</i></span><span>SHIFT <i>BOOST</i></span><span>SPACE <i>JUMP</i></span></div>
+      </div><div class="overlay-side">TURBO LEAGUE <span>·</span> SEASON 01</div>
+    </section>
+    <section class="overlay hidden" id="pauseOverlay">
+      <div class="overlay-grid"></div><div class="overlay-content pause-content"><div class="eyebrow"><span class="eyebrow-line"></span> MATCH PAUSED <span class="eyebrow-line"></span></div><h2>TAKE A<br><em>BREATHER.</em></h2><button class="play-button" id="resumeButton"><span>BACK TO MATCH</span><b>→</b></button><button class="text-button" id="restartButton">RESTART MATCH</button></div>
+    </section>
+    <section class="overlay hidden" id="endOverlay">
+      <div class="overlay-grid"></div><div class="overlay-content"><div class="eyebrow"><span class="eyebrow-line"></span> FINAL WHISTLE <span class="eyebrow-line"></span></div><h2 id="finalTitle">WHAT A<br><em>MATCH.</em></h2><p id="finalScore">ORBITAL 0 — 0 SOLARIS</p><button class="play-button" id="rematchButton"><span>PLAY AGAIN</span><b>→</b></button></div>
+    </section>
+  </main>
+  <script src="game.js"></script>
+</body>
+</html>
