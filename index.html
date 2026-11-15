@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>BEAMDRIVE — Soft-Body Crash Sandbox</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22><rect width=%2264%22 height=%2264%22 fill=%22%23111418%22/><text x=%2232%22 y=%2244%22 font-size=%2232%22 font-family=%22sans-serif%22 font-weight=%22800%22 fill=%22%23ff9d3d%22 text-anchor=%22middle%22>B/D</text></svg>" />
+<link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+<div id="app">
+  <canvas id="scene"></canvas>
+  <div id="vignette"></div>
+  <div id="damageFlash"></div>
+
+  <!-- ================= HUD ================= -->
+  <div id="hud" class="hidden">
+    <div class="hud-top">
+      <div class="hud-mission">
+        <div class="eyebrow"><span class="dot"></span> <span id="missionTag">FREE ROAM</span></div>
+        <div id="missionTitle">Sandbox Playground</div>
+        <div id="missionDesc">Explore the gridmap. Smash things. Try not to die.</div>
+        <div id="missionProgress" class="progress hidden"><div class="fill"></div></div>
+      </div>
+      <div class="hud-right">
+        <div class="stat-strip">
+          <div class="stat"><span class="k">TIME</span><span class="v" id="statTime">--:--.--</span></div>
+          <div class="stat"><span class="k">SCORE</span><span class="v" id="statScore">0</span></div>
+          <div class="stat"><span class="k">BEST</span><span class="v dim" id="statBest">--</span></div>
+        </div>
+        <canvas id="minimap" width="200" height="200"></canvas>
+      </div>
+    </div>
+
+    <div class="hud-bottom">
+      <div class="speedo-wrap">
+        <canvas id="speedo" width="260" height="260"></canvas>
+      </div>
+      <div class="car-status">
+        <div class="status-block">
+          <div class="status-head"><span>STRUCTURAL DAMAGE</span><span id="damageVal">0%</span></div>
+          <div class="bar"><div class="bar-fill damage" id="damageBar"></div></div>
+        </div>
+        <div class="status-block">
+          <div class="status-head"><span>ENGINE</span><span id="engineVal">100%</span></div>
+          <div class="bar"><div class="bar-fill engine" id="engineBar"></div></div>
+        </div>
+        <div class="status-meta">
+          <span id="carName">GAVRIL GRAND</span>
+          <span id="assistState">TC ON</span>
+        </div>
+      </div>
+      <div class="hints">
+        <span><b>WASD</b> drive</span><span><b>SPACE</b> handbrake</span>
+        <span><b>C</b> camera</span><span><b>T</b> slow-mo</span>
+        <span><b>R</b> reset</span><span><b>ESC</b> menu</span>
+      </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+    <div id="slowmoTag" class="slowmo hidden">SLOW MOTION</div>
+    <div id="impactTag" class="impact-tag"></div>
+  </div>
+
+  <!-- ================= TITLE ================= -->
+  <div id="titleScreen">
+    <div class="title-scrim"></div>
+    <div class="title-inner">
+      <div class="brand">
+        <div class="brand-mark">B<span>/</span>D</div>
+        <div class="brand-text">
+          <h1>BEAM<span>DRIVE</span></h1>
+          <p class="tagline">soft-body vehicle &amp; crash sandbox</p>
+        </div>
+      </div>
+      <p class="pitch">Every panel dents. Every crash stays. A physics-driven playground built around one question: <em>how badly can you bend it?</em></p>
+
+      <div class="select-head"><span>CHOOSE YOUR MACHINE</span><span class="rule"></span><span id="carCount">04</span></div>
+      <div id="carCards" class="car-cards"></div>
+
+      <div class="title-actions">
+        <button id="startBtn" class="btn primary">START ENGINE <span class="arrow">&#9654;</span></button>
+        <div class="title-note">
+          <div><b>WASD</b> / arrows to drive · <b>SPACE</b> handbrake · <b>C</b> camera · <b>T</b> slow-mo</div>
+          <div class="dim">Challenges &amp; settings live in the ESC menu. Keyboard required. Click start for audio.</div>
+        </div>
+      </div>
+    </div>
+    <div class="title-footer">
+      <span>AN ORIGINAL WEB TRIBUTE TO BEAMNG.DRIVE</span>
+      <span class="dim">v1.0 · WEBGL · REAL-TIME</span>
+    </div>
+    <div id="titleCarLabel" class="title-car-label"></div>
+  </div>
+
+  <!-- ================= MENU ================= -->
+  <div id="menu" class="hidden">
+    <div class="menu-panel">
+      <div class="menu-head">
+        <div>
+          <div class="eyebrow">PAUSED</div>
+          <h2>GARAGE &amp; CHALLENGES</h2>
+        </div>
+        <button id="closeMenu" class="icon-btn" aria-label="Resume">&#10005;</button>
+      </div>
+      <div class="menu-tabs">
+        <button class="tab active" data-tab="challenges">CHALLENGES</button>
+        <button class="tab" data-tab="controls">CONTROLS</button>
+        <button class="tab" data-tab="settings">SETTINGS</button>
+      </div>
+
+      <div class="tab-body" data-panel="challenges">
+        <div class="mission-grid" id="missionGrid"></div>
+        <div class="menu-row">
+          <button id="repairBtn" class="btn ghost">REPAIR VEHICLE</button>
+          <button id="resetBtn" class="btn ghost">RESET TO START</button>
+          <button id="quitBtn" class="btn ghost danger">QUIT TO TITLE</button>
+        </div>
+      </div>
+
+      <div class="tab-body hidden" data-panel="controls">
+        <div class="controls-grid">
+          <div><b>W / &uarr;</b><span>Throttle</span></div>
+          <div><b>S / &darr;</b><span>Brake &amp; reverse</span></div>
+          <div><b>A D / &larr; &rarr;</b><span>Steer</span></div>
+          <div><b>SPACE</b><span>Handbrake</span></div>
+          <div><b>M</b><span>Mute audio</span></div>
+          <div><b>C</b><span>Cycle camera</span></div>
+          <div><b>MOUSE DRAG</b><span>Orbit look</span></div>
+          <div><b>T</b><span>Toggle slow motion</span></div>
+          <div><b>R</b><span>Reset &amp; repair car</span></div>
+          <div><b>ESC</b><span>Pause menu</span></div>
+        </div>
+        <p class="menu-tip">Tip: hold <b>SPACE</b> while turning to break the rear loose, then counter-steer. Damage is permanent until you repair.</p>
+      </div>
+
+      <div class="tab-body hidden" data-panel="settings">
+        <div class="settings-row"><span>Shadows</span><button class="btn small" id="shadowToggle">ON</button></div>
+        <div class="settings-row"><span>Camera shake</span><button class="btn small" id="shakeToggle">ON</button></div>
+        <div class="settings-row"><span>Sound</span><button class="btn small" id="soundToggle">ON</button></div>
+        <div class="settings-row"><span>Speedometer</span><button class="btn small" id="hudToggle">ON</button></div>
+        <div class="settings-row"><span>Saved records</span><button class="btn small" id="clearRecords">CLEAR</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="loading">
+    <div class="load-mark">B/D</div>
+    <div class="load-text">BUILDING GRIDMAP<span class="dots"></span></div>
+  </div>
+</div>
+
+<script type="importmap">
+{ "imports": { "three": "./src/vendor/three.module.js" } }
+</script>
+<script type="module" src="./src/main.js"></script>
+</body>
+</html>
