@@ -50,8 +50,10 @@ export function resolveRunModels({ selected, live = null, fusionEnabled = false,
 export function retryableProviderError(error) {
   if (!error || typeof error !== 'object') return false
   const type = String(error.type || ''), message = String(error.message || '')
-  return [429, 500, 502, 503, 504].includes(Number(error.status)) || ['provider.free-limit', 'provider.rate-limit', 'provider.overloaded', 'provider.model-not-found'].includes(type) ||
-    /FreeUsageLimit|ModelDeprecated|model.*(?:not found|unavailable|deprecated)|free usage limit|rate.limit/i.test(message) ||
+  // 402 is the provider billing wall ("Insufficient Balance"): that row cannot answer, so the
+  // chain moves on instead of stopping before the Fusion rows.
+  return [402, 429, 500, 502, 503, 504].includes(Number(error.status)) || ['provider.free-limit', 'provider.rate-limit', 'provider.quota', 'provider.overloaded', 'provider.model-not-found'].includes(type) ||
+    /FreeUsageLimit|ModelDeprecated|model.*(?:not found|unavailable|deprecated)|free usage limit|rate.limit|insufficient[_ ]balance|insufficient (?:quota|credits?|funds)|quota exceeded|payment required|billing/i.test(message) ||
     // A dropped upstream stream is worth another model, not a failed build.
     /upstream connection lost|connection (?:lost|reset|closed)|ECONNRESET|fetch failed|socket hang up|terminated/i.test(message)
 }
@@ -65,6 +67,7 @@ export function attemptErrorClass(error) {
   const status = Number(error.status), type = String(error.type || ''), message = String(error.message || '')
   if (proxyTunnelError(error)) return 'proxy'
   if (type === 'provider.free-limit' || /FreeUsageLimit|free usage limit/i.test(message)) return 'free-limit'
+  if (status === 402 || type === 'provider.quota' || /insufficient[_ ]balance|insufficient (?:quota|credits?|funds)|quota exceeded|payment required|billing/i.test(message)) return 'quota'
   if (status === 429 || type === 'provider.rate-limit' || /rate.limit|\b429\b/i.test(message)) return 'rate-limit'
   if ([401, 403].includes(status) || /^provider\.auth|unauthori[sz]ed|forbidden|invalid api key/i.test(type + ' ' + message)) return 'auth'
   return 'other'
