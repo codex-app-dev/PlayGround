@@ -844,6 +844,8 @@ function updateMission(dt) {
 
 /* ============================= input ============================= */
 const keys = new Map();
+const touchPointers = new Map();
+const touchControls = new Set();
 const BLOCK = new Set(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space', 'ShiftLeft', 'ShiftRight']);
 window.addEventListener('keydown', (e) => {
   if (BLOCK.has(e.code)) e.preventDefault();
@@ -872,7 +874,34 @@ window.addEventListener('keydown', (e) => {
   }
 });
 window.addEventListener('keyup', (e) => keys.delete(e.code));
-window.addEventListener('blur', () => keys.clear());
+window.addEventListener('blur', () => {
+  keys.clear();
+  touchPointers.clear();
+  touchControls.clear();
+});
+
+document.querySelectorAll('.touch-btn').forEach((button) => {
+  button.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    if (state.mode !== 'playing') return;
+    button.setPointerCapture(e.pointerId);
+    touchPointers.set(e.pointerId, button.dataset.control);
+    touchControls.add(button.dataset.control);
+    audio.start();
+  });
+  const release = (e) => {
+    const control = touchPointers.get(e.pointerId);
+    if (!control) return;
+    touchPointers.delete(e.pointerId);
+    if (![...touchPointers.values()].includes(control)) touchControls.delete(control);
+  };
+  button.addEventListener('pointerup', release);
+  button.addEventListener('pointercancel', release);
+  button.addEventListener('lostpointercapture', release);
+});
+$('touchPause').addEventListener('click', () => {
+  if (state.mode === 'playing') openMenu();
+});
 
 canvas.addEventListener('pointerdown', (e) => {
   if (state.mode !== 'playing' || e.button !== 0) return;
@@ -893,12 +922,12 @@ canvas.addEventListener('pointermove', (e) => {
 window.addEventListener('pointerup', () => { chase.dragging = false; });
 
 function readInputs() {
-  const up = keys.get('KeyW') || keys.get('ArrowUp');
-  const down = keys.get('KeyS') || keys.get('ArrowDown');
-  const left = keys.get('KeyA') || keys.get('ArrowLeft');
-  const right = keys.get('KeyD') || keys.get('ArrowRight');
-  const handbrake = keys.get('Space') || false;
-  return { up: !!up, down: !!down, left: !!left, right: !!right, handbrake };
+  const up = keys.get('KeyW') || keys.get('ArrowUp') || touchControls.has('up');
+  const down = keys.get('KeyS') || keys.get('ArrowDown') || touchControls.has('down');
+  const left = keys.get('KeyA') || keys.get('ArrowLeft') || touchControls.has('left');
+  const right = keys.get('KeyD') || keys.get('ArrowRight') || touchControls.has('right');
+  const handbrake = keys.get('Space') || touchControls.has('handbrake');
+  return { up: !!up, down: !!down, left: !!left, right: !!right, handbrake: !!handbrake };
 }
 
 function resetMission() {

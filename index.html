@@ -57,6 +57,18 @@
       </div>
     </div>
 
+    <div id="touchControls" class="touch-controls" aria-label="Touch driving controls">
+      <div class="touch-steering" aria-label="Steering">
+        <button class="touch-btn steer" data-control="left" aria-label="Steer left">◀</button>
+        <button class="touch-btn steer" data-control="right" aria-label="Steer right">▶</button>
+      </div>
+      <div class="touch-pedals" aria-label="Pedals">
+        <button class="touch-btn brake" data-control="down" aria-label="Brake and reverse">BRAKE</button>
+        <button class="touch-btn throttle" data-control="up" aria-label="Accelerate">GO</button>
+        <button class="touch-btn handbrake" data-control="handbrake" aria-label="Handbrake">HANDBRAKE</button>
+      </div>
+      <button id="touchPause" class="touch-pause" aria-label="Pause game">Ⅱ</button>
+    </div>
     <div id="toast" class="toast"></div>
     <div id="slowmoTag" class="slowmo hidden">SLOW MOTION</div>
     <div id="impactTag" class="impact-tag"></div>
@@ -82,7 +94,7 @@
         <button id="startBtn" class="btn primary">START ENGINE <span class="arrow">&#9654;</span></button>
         <div class="title-note">
           <div><b>WASD</b> / arrows to drive · <b>SPACE</b> handbrake · <b>C</b> camera · <b>T</b> slow-mo</div>
-          <div class="dim">Challenges &amp; settings live in the ESC menu. Keyboard required. Click start for audio.</div>
+          <div class="dim">Challenges &amp; settings live in the pause menu. Touch controls available on mobile. Click start for audio.</div>
         </div>
       </div>
     </div>
