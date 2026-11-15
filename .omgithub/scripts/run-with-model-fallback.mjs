@@ -205,6 +205,9 @@ export async function runModels({ binary, port, promptFile, logFile, exitFile, s
   const routeList = Array.isArray(routes) ? routes : queue.map(() => 'direct')
   let sessionID = env.RESUME_SESSION_ID || '', child, interrupted = false, code = 1
   const attempts = []
+  // A spent free-model quota belongs to one egress: later rows with the same model and route
+  // are pointless, while the same model behind WARP is a different egress and still gets a turn.
+  const spentEgress = new Set()
   let fusionSwitched = false, dropped = false
   const stop = signal => { interrupted = true; child?.kill(signal) }
   const onTerm = () => stop('SIGTERM'), onInt = () => stop('SIGINT')
@@ -213,6 +216,11 @@ export async function runModels({ binary, port, promptFile, logFile, exitFile, s
     for (let index = 0; index < queue.length; index++) {
       const model = queue[index]
       if (interrupted) break
+      const egress = `${model}|${routeList[index]}`
+      if (spentEgress.has(egress)) {
+        appendFileSync(logFile, `[model-fallback] Skipping ${model} on ${routeList[index]}: free quota already spent for this egress.\n`)
+        continue
+      }
       if (lazyProxy && routeList[index] === 'warp') {
         const setup = lazyProxy; lazyProxy = null
         appendFileSync(logFile, '[model-fallback] Reached a WARP model row; setting up the WARP proxy now.\n')
@@ -257,6 +265,8 @@ export async function runModels({ binary, port, promptFile, logFile, exitFile, s
       else if (outcome === 'failed' || outcome === 'interrupted' || code === 0 && (failure || api)) code = 1
       const retryable = outcome !== 'interrupted' && (retryableProviderError(failure) || fusionFallbackError(model, failure))
       attempts.push({ model, cli_code: cliCode, outcome: outcome || 'unverified', code, retryable, error_class: code === 0 ? null : attemptErrorClass(failure) || (outcome === 'interrupted' ? null : 'other'), duration_ms: Date.now() - started })
+      // Free-model quota is per egress block; Fusion is a separate credential and keeps its rows.
+      if (code !== 0 && !interrupted && model !== fusionModel && attemptErrorClass(failure) === 'free-limit') spentEgress.add(egress)
       writeFileSync(join(directory, 'model-attempts.json'), JSON.stringify(attempts))
       await reportSessionStats({ api, sessionID, directory, env, attempts })
       await pingHeartbeat(env)
