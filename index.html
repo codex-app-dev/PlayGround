@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="theme-color" content="#0a0c0e" />
+<title>BEAMCRASH — Soft-Body Driving Sandbox</title>
+<link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+<div id="app">
+  <canvas id="scene"></canvas>
+  <div id="vignette"></div>
+  <div id="speedlines"></div>
+
+  <div id="hud">
+    <!-- vehicle state -->
+    <section class="panel vehicle-panel">
+      <div class="vp-head">
+        <div>
+          <div class="vp-name" id="vehName">Vantor GT</div>
+          <div class="vp-sub" id="vehSub">SPORT · AWD · 2.6L TURBO</div>
+        </div>
+        <div class="vp-dmg" id="vehDmg">0%</div>
+      </div>
+      <div class="bars" id="damageBars">
+        <div class="bar-row"><span>BODY</span><div class="bar"><i data-part="body"></i></div><b data-val="body">0</b></div>
+        <div class="bar-row"><span>ENGINE</span><div class="bar"><i data-part="engine"></i></div><b data-val="engine">0</b></div>
+        <div class="bar-row"><span>WHEELS</span><div class="bar"><i data-part="wheels"></i></div><b data-val="wheels">0</b></div>
+        <div class="bar-row"><span>CHASSIS</span><div class="bar"><i data-part="chassis"></i></div><b data-val="chassis">0</b></div>
+      </div>
+      <div class="vp-foot">
+        <span id="massRead">1,340 kg</span><span class="dot">·</span><span id="powerRead">286 hp</span>
+        <span class="dot">·</span><span id="engineState">RUNNING</span>
+      </div>
+    </section>
+
+    <!-- objectives / scores -->
+    <section class="panel objective-panel">
+      <div class="obj-head"><span class="obj-kicker">SANDBOX RECORDS</span><span class="obj-live" id="liveTag">LIVE</span></div>
+      <div class="record"><span class="rec-label">TOP SPEED</span><span class="rec-value"><b id="recSpeed">0</b><em>km/h</em></span></div>
+      <div class="record"><span class="rec-label">0–100 KM/H</span><span class="rec-value"><b id="recAccel">—</b><em>s</em></span></div>
+      <div class="record"><span class="rec-label">LONGEST JUMP</span><span class="rec-value"><b id="recJump">0.0</b><em>m</em></span></div>
+      <div class="record"><span class="rec-label">CRASH SCORE</span><span class="rec-value"><b id="recCrash">0</b><em>pts</em></span></div>
+      <div class="obj-target" id="eventHint">CRASH TEST WALL — 118 m EAST</div>
+    </section>
+
+    <!-- minimap -->
+    <section class="panel minimap-panel">
+      <canvas id="minimap" width="220" height="220"></canvas>
+      <div class="mm-label">TEST FACILITY · SECTOR 7</div>
+    </section>
+
+    <!-- speed cluster -->
+    <section class="panel cluster">
+      <svg class="tach" viewBox="0 0 200 200">
+        <defs>
+          <linearGradient id="tachGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#57d6ff"/>
+            <stop offset="55%" stop-color="#ffb340"/>
+            <stop offset="100%" stop-color="#ff3b30"/>
+          </linearGradient>
+        </defs>
+        <path class="tach-bg" d="M 33 152 A 82 82 0 1 1 167 152" />
+        <path class="tach-fill" id="tachFill" d="M 33 152 A 82 82 0 1 1 167 152" />
+        <g id="tachTicks"></g>
+        <g id="needle" transform="rotate(-120 100 100)">
+          <line x1="100" y1="100" x2="100" y2="34" />
+        </g>
+        <circle cx="100" cy="100" r="5" class="needle-hub" />
+      </svg>
+      <div class="cluster-read">
+        <div class="speed"><b id="speedVal">0</b><span>km/h</span></div>
+        <div class="gear-row"><span class="gear" id="gearVal">N</span><span class="rpm" id="rpmVal">800</span><span class="rpm-unit">rpm</span></div>
+      </div>
+    </section>
+
+    <!-- g meter -->
+    <section class="panel gmeter">
+      <canvas id="gcanvas" width="150" height="150"></canvas>
+      <div class="gm-label">G-FORCE</div>
+      <div class="gm-peak">PEAK <b id="gPeak">1.0</b> g</div>
+    </section>
+
+    <div class="hint-bar" id="hintBar">
+      <kbd>W</kbd><kbd>S</kbd> drive <span class="sep"></span>
+      <kbd>A</kbd><kbd>D</kbd> steer <span class="sep"></span>
+      <kbd>Space</kbd> handbrake <span class="sep"></span>
+      <kbd>C</kbd> camera <span class="sep"></span>
+      <kbd>R</kbd> reset <span class="sep"></span>
+      <kbd>T</kbd> slow-mo <span class="sep"></span>
+      <kbd>1</kbd>–<kbd>4</kbd> vehicles <span class="sep"></span>
+      <kbd>H</kbd> hide HUD
+    </div>
+
+    <div id="toast"></div>
+    <div id="slowmoTag"><span>SLOW MOTION</span><b>0.30×</b></div>
+    <div id="impactFlash"></div>
+  </div>
+
+  <div id="garage">
+    <div class="garage-title">SELECT VEHICLE</div>
+    <div class="garage-grid" id="garageGrid"></div>
+    <div class="garage-foot">Press <kbd>1</kbd>–<kbd>4</kbd> or click a card · <kbd>V</kbd> to close</div>
+  </div>
+
+  <div id="boot">
+    <div class="boot-inner">
+      <div class="boot-logo">BEAM<span>CRASH</span></div>
+      <div class="boot-sub">SOFT-BODY PHYSICS SANDBOX</div>
+      <div class="boot-bar"><i></i></div>
+      <div class="boot-tip">Building deformable chassis lattice…</div>
+    </div>
+  </div>
+
+  <div id="touch">
+    <div class="t-left">
+      <button class="tbtn" data-touch="left">◀</button>
+      <button class="tbtn" data-touch="right">▶</button>
+    </div>
+    <div class="t-right">
+      <button class="tbtn small" data-touch="brake">BRK</button>
+      <button class="tbtn" data-touch="gas">GAS</button>
+    </div>
+  </div>
+
+  <div id="audioGate"><span>CLICK FOR ENGINE SOUND</span></div>
+</div>
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>
