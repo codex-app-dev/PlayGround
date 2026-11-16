@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#101a27" />
+  <title>TAILWIND — Wheelie Run</title>
+  <link rel="icon" href="data:," />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="game-shell" aria-label="Tailwind wheelie game">
+    <canvas id="game" aria-label="Game scene"></canvas>
+    <div class="grain" aria-hidden="true"></div>
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="Tailwind home"><span class="brand-mark">T</span><span>TAILWIND<span class="brand-sub">WHEELIE RUN</span></span></a>
+      <div class="level-tag"><span class="live-dot"></span> STAGE 03 <b>·</b> STORMGLASS PASS</div>
+      <button class="sound-button" id="soundBtn" aria-label="Toggle sound">♫ <span>SOUND ON</span></button>
+    </header>
+    <section class="hud" id="hud" aria-live="polite">
+      <div class="hud-card progress-card"><div class="eyebrow">DISTANCE <span id="distance">0</span><small> / 1,200 m</small></div><div class="progress-track"><i id="progressFill"></i><span class="checkpoint cp1"></span><span class="checkpoint cp2"></span><span class="checkpoint cp3"></span></div><div class="progress-labels"><span>START</span><span>THE PASS</span><span>FINISH</span></div></div>
+      <div class="hud-card score-card"><div class="eyebrow">RUN SCORE</div><div class="score-value" id="score">000000</div><div class="combo" id="combo">◇ 0 STREAK</div></div>
+      <div class="hud-card objective-card"><span class="objective-icon">✳</span><div><div class="eyebrow">SIGNAL SHARDS</div><strong><span id="shards">0</span><small> / 8</small></strong></div></div>
+      <div class="hud-card burst-card"><div class="eyebrow">THERMAL BURST <span id="burstLabel">EMPTY</span></div><div class="burst-track"><i id="burstFill"></i></div><div class="burst-copy">HOLD WHEELIE TO CHARGE</div></div>
+    </section>
+    <aside class="toast" id="toast" aria-live="polite"></aside>
+    <div class="center-overlay" id="overlay">
+      <div class="intro-panel">
+        <div class="panel-kicker"><span>NEW ROUTE</span><i></i><span>01:30 EST.</span></div>
+        <h1>RIDE THE<br><em>TAILWIND.</em></h1>
+        <p class="lead">A high-speed wheelie through the Stormglass Pass.</p>
+        <div class="challenge"><div class="challenge-badge">✳</div><div><b>FRESH CHALLENGE</b><span>Collect 8 signal shards before the pass ends.</span></div></div>
+        <div class="mechanic-note"><span class="wind-icon">↗</span><div><b>THERMAL BURST</b><span>Bank a lift charge in a wheelie. Fire it to float over the broken ground.</span></div></div>
+        <button class="start-button" id="startBtn"><span>START YOUR RUN</span><b>↗</b></button>
+        <div class="controls-hint"><span>← / →</span> LEAN <i>·</i> <span>↑</span> THROTTLE <i>·</i> <span>SPACE</span> THERMAL BURST</div>
+      </div>
+    </div>
+    <div class="end-overlay hidden" id="endOverlay"><div class="end-panel"><div class="panel-kicker" id="endKicker">RUN COMPLETE</div><h2 id="endTitle">PASS<br><em>CONQUERED.</em></h2><p id="endCopy">The ridge is yours.</p><div class="end-stats"><div><small>SCORE</small><b id="finalScore">000000</b></div><div><small>SHARDS</small><b id="finalShards">0 / 8</b></div><div><small>BEST STREAK</small><b id="finalCombo">0 m</b></div></div><button class="start-button" id="againBtn"><span>RIDE AGAIN</span><b>↻</b></button></div></div>
+    <div class="mobile-controls" id="mobileControls"><button data-control="leanBack" aria-label="Lean back">◀<small>LEAN</small></button><button data-control="throttle" class="throttle" aria-label="Throttle">▲<small>GO</small></button><button data-control="leanForward" aria-label="Lean forward">▶<small>LEAN</small></button><button data-control="burst" class="burst" aria-label="Thermal burst">✳<small>BURST</small></button></div>
+    <footer class="bottom-hint"><span>STORMGLASS PASS</span><span class="wind-readout">WIND <b id="wind">↗ 12</b> KM/H</span><span>© TAILWIND MOTOR CLUB</span></footer>
+  </main>
+  <script src="game.js"></script>
+</body>
+</html>
